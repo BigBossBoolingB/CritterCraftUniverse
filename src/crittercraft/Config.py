@@ -12,7 +12,6 @@ MOOD_THRESHOLD_SAD: int = 30    # Happiness below this is 'Sad'
 
 # --- Game Loop & Persistence ---
 GAME_INTERVAL_SECONDS: int = 7 # How often the pet's state ticks (e.g., hunger increases)
-LOCAL_STORAGE_KEY: str = "critterCraftPetMVP_v3" # Key for local persistence (increment version for new state structures)
 
 # --- Interaction Values ---
 FEED_HUNGER_RESTORE: int = 20

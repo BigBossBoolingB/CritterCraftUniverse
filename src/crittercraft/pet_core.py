@@ -5,7 +5,7 @@ import uuid
 from typing import Dict, Any, List, Optional
 from dataclasses import dataclass, field
 
-from .config import ( # Import constants from config
+from .Config import ( # Import constants from config
     MAX_STAT, STAT_DECAY_RATE, HAPPINESS_DECAY_RATE,
     FEED_HUNGER_RESTORE, PLAY_HAPPINESS_BOOST, PLAY_ENERGY_COST,
     MOOD_THRESHOLD_HAPPY, MOOD_THRESHOLD_SAD,
@@ -25,10 +25,10 @@ class Pet:
     Represents a CritterCraft Genesis Pet.
     This is the core data model for our AI digital companion.
     """
-    id: str = field(default_factory=lambda: str(uuid.uuid4())) # Unique ID for potential blockchain migration
     name: str
     species: str            # e.g., 'sprite_glow', 'sprite_crystal'
     aura_color: str         # e.g., 'aura-blue', 'aura-gold'
+    id: str = field(default_factory=lambda: str(uuid.uuid4())) # Unique ID for potential blockchain migration
     
     # Core Vitals (0-MAX_STAT)
     hunger: int = 50

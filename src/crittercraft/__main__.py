@@ -2,6 +2,7 @@
 import time
 import os
 import sys
+from typing import Optional
 
 # Add parent directory to path to allow import if running directly from this folder
 # This setup is for local testing structure, might differ in actual app
@@ -9,49 +10,28 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 if current_dir not in sys.path:
     sys.path.insert(0, current_dir)
 
-from .pet_core import Pet, InteractionRecord # Import Pet class and InteractionRecord
-from .config import LOCAL_STORAGE_KEY, GAME_INTERVAL_SECONDS, PET_ARCHETYPES, PET_AURA_COLORS # Import configs
+from .pet_core import Pet, InteractionRecord
+from .Config import GAME_INTERVAL_SECONDS, PET_ARCHETYPES, PET_AURA_COLORS, MAX_STAT, MOOD_THRESHOLD_HAPPY, FEED_HUNGER_RESTORE, MIGRATION_READINESS_THRESHOLDS
+from . import vdatabprot as db
 
-# --- Persistence Manager (Simplified for CLI) ---
-# In a real app, this would be a dedicated module or integrated with state management.
-def save_pet_to_local_storage(pet: Pet):
-    """Saves pet state to a local JSON file."""
-    try:
-        # Use a consistent filename based on pet ID for potential future multi-pet support
-        filename = f"{LOCAL_STORAGE_KEY}_{pet.id}.json" 
-        with open(filename, 'w') as f:
-            f.write(pet.to_json())
-        print(f"[{pet.name}] State saved successfully.")
-    except Exception as e:
-        print(f"ERROR: Failed to save pet state: {e}")
+# --- Persistence Manager (VDataBProt) ---
+def save_pet(pet: Pet):
+    """Saves pet state to VDataBProt."""
+    db.save(pet.id, pet.to_json())
 
-def load_pet_from_local_storage(pet_id: Optional[str] = None) -> Optional[Pet]:
-    """Loads pet state from a local JSON file."""
-    try:
-        # For simplicity, if no ID, try to load any existing pet or the first one.
-        # In a real app, user would select.
-        if pet_id:
-            filename = f"{LOCAL_STORAGE_KEY}_{pet_id}.json"
-        else: # Try to find any existing pet file
-            files = [f for f in os.listdir('.') if f.startswith(LOCAL_STORAGE_KEY) and f.endswith('.json')]
-            if not files:
-                return None
-            filename = files[0] # Load the first one found
-            
-        with open(filename, 'r') as f:
-            json_data = f.read()
-            pet = Pet.from_json(json_data)
-            print(f"[{pet.name}] State loaded successfully.")
-            return pet
-    except FileNotFoundError:
-        print(f"No saved pet found with ID {pet_id if pet_id else 'any'}.")
+def load_pet(pet_id: Optional[str] = None) -> Optional[Pet]:
+    """Loads pet state from VDataBProt."""
+    if not hasattr(db, '_VDataBProt_store'):
         return None
-    except json.JSONDecodeError as e:
-        print(f"ERROR: Corrupted pet save file '{filename}': {e}")
+
+    keys = list(db._VDataBProt_store.keys())
+    if not keys:
         return None
-    except Exception as e:
-        print(f"ERROR: Failed to load pet state: {e}")
-        return None
+
+    json_data = db.load(keys[0])
+    if json_data:
+        return Pet.from_json(json_data)
+    return None
 
 # --- Main Game Loop ---
 def main():
@@ -59,7 +39,7 @@ def main():
     current_pet: Optional[Pet] = None
 
     # Attempt to load an existing pet
-    current_pet = load_pet_from_local_storage()
+    current_pet = load_pet()
 
     if current_pet is None:
         print("\nNo existing Genesis Pet found. Let's sculpt a new one!")
@@ -130,7 +110,7 @@ def main():
         elif choice == '5':
             # Create New Pet - This action saves the current pet and then starts fresh
             print("Saving current pet and forging a new Genesis...")
-            save_pet_to_local_storage(current_pet) # Save current pet before replacing
+            save_pet(current_pet) # Save current pet before replacing
             main() # Recursively call main to start new pet creation flow
             return # Exit this instance of main after recursive call
         elif choice == '6':
@@ -162,7 +142,7 @@ def main():
             action_taken_that_ticks = False # Conceptual action doesn't pass game time
         elif choice == '7':
             print(f"Goodbye! Saving {current_pet.name}'s state...")
-            save_pet_to_local_storage(current_pet)
+            save_pet(current_pet)
             break
         else:
             print("Invalid choice. Please enter a number between 1 and 7.")
@@ -176,9 +156,4 @@ def main():
             print(f"[{current_pet.name}] Mood: {current_pet.mood}, Sustenance: {current_pet.hunger}/{MAX_STAT}, Energy: {current_pet.energy}/{MAX_STAT}, Happiness: {current_pet.happiness}/{MAX_STAT}.")
 
 if __name__ == "__main__":
-    # Ensure a local storage directory exists for clean file management
-    if not os.path.exists("crittercraft_saves"):
-        os.makedirs("crittercraft_saves")
-    os.chdir("crittercraft_saves") # Change into saves directory
-
     main()
