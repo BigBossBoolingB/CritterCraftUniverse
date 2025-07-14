@@ -1,121 +1,124 @@
-# CritterCraft Universe
-
+CritterCraft Universe
 CritterCraft Universe is an advanced AI-powered blockchain pet simulation platform that creates meaningful digital companions with evolving personalities.
 
-## Key Features
+Key Features
+Intelligent Companions: AI-powered pets that develop unique personalities.
 
-- **Intelligent Companions**: AI-powered pets that develop unique personalities
-- **Dynamic NFTs**: Continuously evolving digital assets that reflect real experiences
-- **Custom Blockchain**: Purpose-built infrastructure optimized for pet simulation mechanics
-- **Emotional Engagement**: Focus on meaningful relationships rather than purely transactional gameplay
+Dynamic NFTs: Continuously evolving digital assets that reflect real experiences.
 
-## Technology Stack
+Custom Blockchain: Purpose-built infrastructure optimized for pet simulation mechanics.
 
-### Backend
-- Python 3.11
-- Flask/FastAPI
-- SQLAlchemy
-- TensorFlow/PyTorch
-- LangChain
-- Substrate/Polkadot
+Emotional Engagement: Focus on meaningful relationships rather than purely transactional gameplay.
 
-### Frontend
-- React 18
-- TypeScript
-- Vite
-- Three.js
-- Polkadot.js API
-- Material UI
+Technology Stack
+Backend
+Python 3.11
 
-### Infrastructure
-- Docker
-- PostgreSQL
-- Redis
-- Nginx
-- GitHub Actions
+Flask/FastAPI
 
-## Getting Started
+SQLAlchemy
 
-### Prerequisites
-- Docker and Docker Compose
-- Node.js 18+
-- Python 3.11+
-- Git
+TensorFlow/PyTorch
 
-### Installation
+LangChain
 
-1. Clone the repository:
-```bash
+Substrate/Polkadot
+
+Frontend
+React 18
+
+TypeScript
+
+Vite
+
+Three.js
+
+Polkadot.js API
+
+Material UI
+
+Infrastructure
+Docker
+
+PostgreSQL
+
+Redis
+
+Nginx
+
+GitHub Actions
+
+Getting Started
+Prerequisites
+Docker and Docker Compose
+
+Node.js 18+
+
+Python 3.11+
+
+Git
+
+Installation
+Clone the repository:
+
 git clone https://github.com/your-org/crittercraft-universe.git
 cd crittercraft-universe
-```
 
-2. Set up environment variables:
-```bash
+Set up environment variables:
+
 cp .env.example .env
 # Edit .env with your configuration
-```
 
-3. Start the application with Docker:
-```bash
+Start the application with Docker:
+
 docker-compose up -d
-```
 
-4. Or run the services individually:
+Or run the services individually:
 
-**Backend:**
-```bash
+Backend:
+
 cd blockchain_core/critter-craft
 pip install -r requirements.txt
 python main.py
-```
 
-**Frontend:**
-```bash
+Frontend:
+
 cd frontend
 npm install
 npm run start
-```
 
-## Development
-
-### Backend Development
-```bash
+Development
+Backend Development
 # Run tests
 cd blockchain_core/critter-craft
 pytest
 
 # Run with hot reload
 uvicorn main:app --reload
-```
 
-### Frontend Development
-```bash
+Frontend Development
 cd frontend
+
+# Run dev server
 npm run dev
 
 # Run tests
 npm run test
-```
 
-## Deployment
-
+Deployment
 The application can be deployed using Docker Compose:
 
-```bash
 docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
-```
 
-## Contributing
+Contributing
+Please read CONTRIBUTING.md for details on our code of conduct and the process for submitting pull requests.
 
-Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests.
+License
+This project is licensed under the MIT License - see the LICENSE file for details.
 
-## License
+Acknowledgments
+The Substrate and Polkadot teams for blockchain infrastructure
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+OpenAI for AI capabilities
 
-## Acknowledgments
-
-- The Substrate and Polkadot teams for blockchain infrastructure
-- OpenAI for AI capabilities
-- The open-source community for various libraries and tools
+The open-source community for various libraries and tools
