@@ -1,11 +1,14 @@
 import unittest
 import json
-from main import app, create_new_pet, save_pet
+from main import app, save_pet
+from pet.ai.pet_core import Pet, PetLogicManager
+from pet.ai.config import PET_ARCHETYPES, PET_AURA_COLORS
 
 class TestAPI(unittest.TestCase):
     def setUp(self):
         self.app = app.test_client()
-        self.pet, _ = create_new_pet(name="Test Pet", species="sprite_glow", aura_color="aura-blue")
+        self.pet = Pet(name="Test Pet", species="sprite_glow", aura_color="aura-blue")
+        self.pet_manager = PetLogicManager(self.pet)
         save_pet(self.pet)
 
     def test_get_pet_status(self):

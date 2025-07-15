@@ -2,7 +2,7 @@
     "name": "Test Pet",
     "species": "sprite_glow",
     "aura_color": "aura-blue",
-    "id": "46f672f7-f96f-4ebd-82c8-d5a79ec8d9eb",
+    "id": "280d1a52-1feb-46e9-8277-5db946f12ae4",
     "hunger": 20,
     "energy": 90,
     "happiness": 65,
@@ -23,11 +23,11 @@
         "calmness": 50,
         "stubbornness": 50
     },
-    "creation_timestamp": 1752554684892179088,
-    "last_active_timestamp": 1752554684892179577,
+    "creation_timestamp": 1752557257839048783,
+    "last_active_timestamp": 1752557257839049130,
     "interaction_history": [
         {
-            "timestamp": 1752554684893550408,
+            "timestamp": 1752557257840343329,
             "type": "feed",
             "details": "Fed the pet"
         }

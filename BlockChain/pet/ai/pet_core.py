@@ -18,13 +18,11 @@ from dataclasses import dataclass, field, asdict
 from enum import Enum
 
 # Import constants from the centralized config file
-from ..config import (
+from .config import (
     Stat, Mood as ConfigMood, PersonalityTrait as ConfigPersonalityTrait,
-    GenesisPetConfig, PET_ARCHETYPES, PET_AURA_COLORS, AI_PERSONALITY_TRAITS
+    GenesisPetConfig, PET_ARCHETYPES, PET_AURA_COLORS, AI_PERSONALITY_TRAITS,
+    MOOD_THRESHOLD_HAPPY, MOOD_THRESHOLD_SAD
 )
-
-MOOD_THRESHOLD_HAPPY = 75
-MOOD_THRESHOLD_SAD = 25
 
 # --- Custom Exceptions for Clarity ---
 class PetError(Exception):
@@ -109,7 +107,7 @@ class InteractionRecord:
 class Pet:
     """
     Represents a CritterCraft Genesis Pet.
-    This is the core data model, focused on state. Logic is handled by PetLogicManager.
+    This is the core data model for our AI digital companion.
     
     Following KISS principles:
     - K: Clear separation of data and logic

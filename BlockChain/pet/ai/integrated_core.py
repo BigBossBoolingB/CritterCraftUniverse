@@ -21,18 +21,18 @@ from dataclasses import dataclass, field, asdict
 from enum import Enum, auto
 
 # Import from the centralized config file
-from config import (
+from .config import (
     Stat, Mood as ConfigMood, PersonalityTrait as ConfigPersonalityTrait,
     GenesisPetConfig, CritterCraftConfig
 )
 
 # Import from pet_core.py and critter_core.py
-from pet_core import (
+from .pet_core import (
     Pet, PetLogicManager, PetPersistence, 
     Mood as PetMood, InteractionType as PetInteractionType
 )
 
-from critter_core import (
+from .critter_core import (
     Critter, CritterPersistence,
     MaterialType, AdaptationType, BodyPosition, Environment,
     CraftingMaterial, Adaptation

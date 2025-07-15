@@ -7,8 +7,8 @@ This is the command-line interface for interacting with your virtual pet.
 import os
 import time
 import json
-from pet.ai.pet_core import Pet, PetLogicManager # Import Pet class from the ai directory
-from pet.config import ( # Assumes config.py defines these dictionaries/constants
+from pet.ai.pet_core import Pet, PetLogicManager
+from pet.ai.config import (
     PET_ARCHETYPES,
     PET_AURA_COLORS,
     MIGRATION_READINESS_THRESHOLDS

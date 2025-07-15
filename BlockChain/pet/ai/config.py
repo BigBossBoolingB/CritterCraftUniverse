@@ -204,6 +204,134 @@ class GenesisPetConfig:
 # --- II. CRITTER-CRAFT CONFIGURATION ---
 # ==============================================================================
 
+PET_ARCHETYPES = {
+    'sprite_glow': {
+        'display_name': 'Glowing Sprite',
+        'description': 'A luminous, ethereal creature that radiates gentle light. Often curious and energetic.',
+        'traits': ['curious', 'playful', 'energetic'],
+        'rarity': 'Common',
+        'base_stats_modifier': {'energy': 10, 'iq': 5}, # Start with more energy and intelligence
+        'aura_effect_modifier': {'energy': 0.1, 'happiness': 0.05}, # Aura effects are 10% more potent for this species
+        'aging_rate': 6  # Ages 6x faster than humans after first year
+    },
+    'sprite_crystal': {
+        'display_name': 'Crystal Sprite',
+        'description': 'A crystalline entity with a faceted body that refracts light beautifully. Calm and patient.',
+        'traits': ['calm', 'wise', 'patient'],
+        'rarity': 'Uncommon',
+        'base_stats_modifier': {'happiness': 5, 'social': -10}, # Slightly happier, less social
+        'trait_modifiers': {'playfulness': -0.1, 'curiosity': 0.05}, # 10% less playful, 5% more curious over time
+        'aging_rate': 4  # Ages 4x faster than humans after first year
+    },
+    'sprite_shadow': {
+        'display_name': 'Shadow Sprite',
+        'description': 'A mysterious being composed of shifting shadows and dark energy. Independent and observant.',
+        'traits': ['mysterious', 'independent', 'observant'],
+        'rarity': 'Rare',
+        'base_stats_modifier': {'social': -20, 'charisma': 10}, # Very independent, charming in a dark way
+        'decay_rate_modifier': {'social': -0.2}, # Social stat decays 20% slower
+        'interaction_boosts': {'chat': {'iq': 2}} # Chatting boosts IQ even more for Shadow Sprites
+    },
+    'sprite_ember': {
+        'display_name': 'Ember Sprite',
+        'description': 'A warm, fiery creature with a passionate spirit. Brave and protective.',
+        'traits': ['passionate', 'brave', 'protective'],
+        'rarity': 'Uncommon',
+        'base_stats_modifier': {'energy': 20, 'happiness': -5}, # More energetic, slightly moodier
+        'decay_rate_modifier': {'energy': -0.1} # Energy decays 10% slower
+    },
+    'sprite_aqua': {
+        'display_name': 'Aqua Sprite',
+        'description': 'A fluid, water-like being that flows with grace and adaptability. Peaceful and creative.',
+        'traits': ['adaptable', 'peaceful', 'creative'],
+        'rarity': 'Uncommon',
+        'base_stats_modifier': {'cleanliness': 10, 'iq': 5}, # Naturally cleaner and smarter
+        'interaction_boosts': {'groom': {'happiness': 5}} # Grooming provides extra happiness for Aqua Sprites
+    }
+}
+
+PET_AURA_COLORS = {
+    'aura-blue': {
+        'display_name': 'Sapphire Blue',
+        'description': 'A calming blue aura that soothes the mind.',
+        'effect': 'Increases wisdom and patience.',
+        'stat_boosts': {'iq': 0.05, 'happiness': 0.02}, # 5% IQ boost, 2% happiness boost
+        'decay_reduction': {'energy': 0.03} # Reduces energy decay by 3%
+    },
+    'aura-gold': {
+        'display_name': 'Radiant Gold',
+        'description': 'A brilliant golden aura that inspires confidence.',
+        'effect': 'Boosts charisma and leadership.',
+        'stat_boosts': {'charisma': 0.10, 'social': 0.05},
+    },
+    'aura-green': {
+        'display_name': 'Emerald Green',
+        'description': 'A nurturing green aura connected to growth and healing.',
+        'effect': 'Enhances growth and recovery rates.',
+        'stat_boosts': {'energy': 0.03, 'cleanliness': 0.05},
+        'decay_reduction': {'hunger': 0.02} # Reduces hunger decay by 2%
+    },
+    'aura-purple': {
+        'display_name': 'Mystic Purple',
+        'description': 'A mysterious purple aura linked to psychic abilities.',
+        'effect': 'Improves intuition and perception.',
+        'stat_boosts': {'iq': 0.08, 'social': -0.01}, # IQ boost, slight social reduction
+    },
+    'aura-red': {
+        'display_name': 'Passionate Red',
+        'description': 'An energetic red aura full of vitality.',
+        'effect': 'Increases energy and determination.',
+        'stat_boosts': {'energy': 0.12},
+        'decay_reduction': {'happiness': 0.01} # Slightly reduces happiness decay
+    }
+}
+
+AI_PERSONALITY_TRAITS = {
+    'playfulness': {
+        'description': 'Influences the pet\'s playful and energetic responses.',
+        'default': 50,
+        'min': 0,
+        'max': 100
+    },
+    'curiosity': {
+        'description': 'Determines how interested the pet is in exploring and learning.',
+        'default': 50,
+        'min': 0,
+        'max': 100
+    },
+    'sociability': {
+        'description': 'Governs the pet\'s enjoyment of interaction and social engagement.',
+        'default': 50,
+        'min': 0,
+        'max': 100
+    },
+    'independence': {
+        'description': 'Indicates how self-sufficient the pet is when left alone, affecting clinginess.',
+        'default': 50,
+        'min': 0,
+        'max': 100
+    },
+    'loyalty': {
+        'description': 'Reflects the pet\'s devotion to its owner.',
+        'default': 50,
+        'min': 0,
+        'max': 100
+    }
+}
+
+MIGRATION_READINESS_THRESHOLDS = {
+    'min_happiness': 75,
+    'min_energy': 65,
+    'max_hunger': 25,
+    'min_interactions': 30,
+    'min_days_owned': 7,
+    'min_iq': 20,
+    'min_charisma': 15,
+}
+
+MOOD_THRESHOLD_HAPPY = 75
+MOOD_THRESHOLD_SAD = 25
+
 class CritterCraftConfig:
     """A namespace for all settings related to the animal-crafting game concept."""
 
