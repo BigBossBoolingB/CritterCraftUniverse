@@ -156,3 +156,8 @@ To extend the system, you can:
 7. **Add new item types** to the economy system by creating new classes in `pallet-economy/src/items.py`.
 8. **Add new recipes** to the crafting system by creating new Recipe instances in `pallet-economy/src/crafting.py`.
 9. **Enhance the integration** by adding new functions to the integration modules.
+
+## Frontend Testing
+Frontend tests exist and their setup is verified.
+Dynamic execution (npm install, npm run test) is currently blocked by sandbox limitations ("affected too many files").
+Recommendation: Frontend tests should be run and verified in a local development environment.
