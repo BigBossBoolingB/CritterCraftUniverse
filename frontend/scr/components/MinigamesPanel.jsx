@@ -1,15 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, Button, Select, Table, Tag, Modal, InputNumber, Spin, notification, Tabs, Statistic, Row, Col } from 'antd';
-import { 
-  TrophyOutlined, 
-  RocketOutlined, 
-  BulbOutlined, 
+import {
+  TrophyOutlined,
+  RocketOutlined,
+  BulbOutlined,
   ClockCircleOutlined,
   CheckCircleOutlined,
   CloseCircleOutlined,
-  PlayCircleOutlined
+  PlayCircleOutlined,
 } from '@ant-design/icons';
-import critterCraftAPI from '../crittercraft_api';
+import { useMinigames, gameTypes, difficultyLevels } from '../hooks/useMinigames';
 
 const { Option } = Select;
 const { TabPane } = Tabs;
@@ -18,9 +18,18 @@ const { TabPane } = Tabs;
  * MinigamesPanel component for starting and managing mini-games
  */
 const MinigamesPanel = ({ pets = [] }) => {
-  const [loading, setLoading] = useState(true);
-  const [activeGames, setActiveGames] = useState([]);
-  const [completedGames, setCompletedGames] = useState([]);
+  const {
+    loading,
+    activeGames,
+    completedGames,
+    actionLoading,
+    refreshing,
+    fetchGames,
+    startGame,
+    submitScore,
+    cancelGame,
+  } = useMinigames(pets);
+
   const [startGameModalVisible, setStartGameModalVisible] = useState(false);
   const [submitScoreModalVisible, setSubmitScoreModalVisible] = useState(false);
   const [selectedPet, setSelectedPet] = useState(null);
@@ -28,153 +37,19 @@ const MinigamesPanel = ({ pets = [] }) => {
   const [selectedDifficulty, setSelectedDifficulty] = useState('Easy');
   const [selectedGameId, setSelectedGameId] = useState(null);
   const [score, setScore] = useState(1000);
-  const [actionLoading, setActionLoading] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
 
-  // Game type options
-  const gameTypes = [
-    { value: 'LogicLeaper', label: 'Logic Leaper', description: 'A puzzle game that trains Intelligence' },
-    { value: 'AuraWeaving', label: 'Aura Weaving', description: 'A rhythm game that trains Charisma' },
-    { value: 'HabitatDash', label: 'Habitat Dash', description: 'An endless runner that trains Agility' },
-  ];
-
-  // Difficulty options
-  const difficultyLevels = [
-    { value: 'Easy', label: 'Easy', multiplier: '1x' },
-    { value: 'Medium', label: 'Medium', multiplier: '2x' },
-    { value: 'Hard', label: 'Hard', multiplier: '3x' },
-    { value: 'Expert', label: 'Expert', multiplier: '4x' },
-  ];
-
-  // Fetch active games on component mount
-  useEffect(() => {
-    fetchGames();
-  }, []);
-
-  // Fetch active and completed games
-  const fetchGames = async () => {
-    try {
-      setRefreshing(true);
-      const activeGameIds = await critterCraftAPI.getActiveGamesByPlayer();
-      
-      // Fetch details for each active game
-      const activeGamesPromises = activeGameIds.map(id => critterCraftAPI.getGame(id));
-      const activeGamesData = await Promise.all(activeGamesPromises);
-      
-      // Fetch completed games (this is a placeholder - in a real app, you'd have an API for this)
-      // For now, we'll just use a mock
-      const completedGamesData = []; // Mock data would go here
-      
-      setActiveGames(activeGamesData);
-      setCompletedGames(completedGamesData);
-    } catch (error) {
-      console.error('Failed to fetch games:', error);
-      notification.error({
-        message: 'Failed to fetch games',
-        description: error.message,
-      });
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
+  const handleStartGame = () => {
+    startGame(selectedPet, selectedGameType, selectedDifficulty);
+    setStartGameModalVisible(false);
   };
 
-  // Start a new game
-  const handleStartGame = async () => {
-    if (!selectedPet) {
-      notification.warning({
-        message: 'No pet selected',
-        description: 'Please select a pet to play the game.',
-      });
-      return;
-    }
-
-    try {
-      setActionLoading(true);
-      
-      // Convert string values to enum indices
-      const gameTypeIndex = gameTypes.findIndex(type => type.value === selectedGameType);
-      const difficultyIndex = difficultyLevels.findIndex(level => level.value === selectedDifficulty);
-      
-      await critterCraftAPI.startGame(
-        selectedPet,
-        gameTypeIndex,
-        difficultyIndex
-      );
-      
-      notification.success({
-        message: 'Game started',
-        description: `You've started a ${selectedDifficulty} ${gameTypes.find(type => type.value === selectedGameType).label} game!`,
-      });
-      
-      setStartGameModalVisible(false);
-      fetchGames();
-    } catch (error) {
-      console.error('Failed to start game:', error);
-      notification.error({
-        message: 'Failed to start game',
-        description: error.message,
-      });
-    } finally {
-      setActionLoading(false);
-    }
+  const handleSubmitScore = () => {
+    submitScore(selectedGameId, score);
+    setSubmitScoreModalVisible(false);
   };
 
-  // Submit a score for a game
-  const handleSubmitScore = async () => {
-    if (!selectedGameId) {
-      notification.warning({
-        message: 'No game selected',
-        description: 'Please select a game to submit a score for.',
-      });
-      return;
-    }
-
-    try {
-      setActionLoading(true);
-      
-      await critterCraftAPI.submitScore(selectedGameId, score);
-      
-      notification.success({
-        message: 'Score submitted',
-        description: `You've submitted a score of ${score} for your game!`,
-      });
-      
-      setSubmitScoreModalVisible(false);
-      fetchGames();
-    } catch (error) {
-      console.error('Failed to submit score:', error);
-      notification.error({
-        message: 'Failed to submit score',
-        description: error.message,
-      });
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  // Cancel a game
-  const handleCancelGame = async (gameId) => {
-    try {
-      setActionLoading(true);
-      
-      await critterCraftAPI.cancelGame(gameId);
-      
-      notification.success({
-        message: 'Game canceled',
-        description: 'The game has been canceled successfully.',
-      });
-      
-      fetchGames();
-    } catch (error) {
-      console.error('Failed to cancel game:', error);
-      notification.error({
-        message: 'Failed to cancel game',
-        description: error.message,
-      });
-    } finally {
-      setActionLoading(false);
-    }
+  const handleCancelGame = (gameId) => {
+    cancelGame(gameId);
   };
 
   // Open the submit score modal

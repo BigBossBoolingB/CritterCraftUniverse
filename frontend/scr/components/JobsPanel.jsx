@@ -1,17 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, Button, Select, Table, Tag, Modal, InputNumber, Spin, notification, Tabs, Statistic, Row, Col, Progress, Alert } from 'antd';
-import { 
-  DollarOutlined, 
-  ClockCircleOutlined, 
+import {
+  DollarOutlined,
+  ClockCircleOutlined,
   CheckCircleOutlined,
   CloseCircleOutlined,
   PlusOutlined,
   TrophyOutlined,
   BulbOutlined,
   FireOutlined,
-  ReloadOutlined
+  ReloadOutlined,
 } from '@ant-design/icons';
-import critterCraftAPI, { ConnectionError, TransactionError, QueryError } from '../crittercraft_api_improved';
+import { useJobs, jobTypes } from '../hooks/useJobs';
 
 const { Option } = Select;
 const { TabPane } = Tabs;
@@ -20,283 +20,30 @@ const { TabPane } = Tabs;
  * JobsPanel component for starting and managing jobs
  */
 const JobsPanel = ({ pets = [] }) => {
-  const [loading, setLoading] = useState(true);
-  const [activeJobs, setActiveJobs] = useState([]);
-  const [completedJobs, setCompletedJobs] = useState([]);
+  const {
+    loading,
+    activeJobs,
+    completedJobs,
+    actionLoading,
+    refreshing,
+    connectionStatus,
+    walletStatus,
+    fetchJobs,
+    connectWallet,
+    checkConnection,
+    startJob,
+    completeJob,
+    cancelJob,
+  } = useJobs(pets);
+
   const [startJobModalVisible, setStartJobModalVisible] = useState(false);
   const [selectedPet, setSelectedPet] = useState(null);
   const [selectedJobType, setSelectedJobType] = useState('CrystalMining');
   const [duration, setDuration] = useState(500);
-  const [actionLoading, setActionLoading] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
 
-  // Job type options
-  const jobTypes = [
-    { value: 'CrystalMining', label: 'Crystal Mining', stat: 'Strength', description: 'Mine crystals in the caves' },
-    { value: 'BioluminescentGuide', label: 'Bioluminescent Guide', stat: 'Charisma', description: 'Guide visitors through bioluminescent areas' },
-    { value: 'HerbalistAssistant', label: 'Herbalist Assistant', stat: 'Intelligence', description: 'Assist the herbalist in gathering and processing herbs' },
-  ];
-
-  /**
-   * Initialize component, connect to blockchain and fetch initial data
-   */
-  useEffect(() => {
-    // Initialize connection and fetch jobs
-    const initializeComponent = async () => {
-      try {
-        // Try to connect if not already connected
-        if (!critterCraftAPI.isConnected) {
-          await critterCraftAPI.connect();
-        }
-        
-        // Update connection status
-        setConnectionStatus({
-          connected: critterCraftAPI.isConnected,
-          checking: false
-        });
-        
-        // Fetch jobs
-        fetchJobs();
-      } catch (error) {
-        setConnectionStatus({
-          connected: false,
-          checking: false
-        });
-        
-        // Use our centralized error handling
-        handleError(error, 'initialization');
-        
-        // Still set loading to false
-        setLoading(false);
-      }
-    };
-    
-    initializeComponent();
-  }, []);
-
-  /**
-   * Fetch active and completed jobs
-   * @returns {Promise<void>}
-   */
-  const fetchJobs = async () => {
-    try {
-      setRefreshing(true);
-      
-      // Fetch active jobs
-      const activeJobIds = await critterCraftAPI.getActiveJobsByOwner();
-      
-      // Fetch details for each active job
-      const activeJobsPromises = activeJobIds.map(id => critterCraftAPI.getJob(id));
-      const activeJobsData = await Promise.all(activeJobsPromises);
-      
-      // Fetch completed jobs using our new API method
-      const completedJobsData = await critterCraftAPI.getCompletedJobsByOwner(null, 10);
-      
-      // Update state with fetched data
-      setActiveJobs(activeJobsData);
-      setCompletedJobs(completedJobsData);
-    } catch (error) {
-      // Use our centralized error handling
-      handleError(error, 'fetching jobs');
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
-  
-  /**
-   * Retry connection to the blockchain
-   * @returns {Promise<void>}
-   */
-  const retryConnection = async () => {
-    notification.info({
-      message: 'Reconnecting',
-      description: 'Attempting to reconnect to the blockchain...',
-    });
-    
-    try {
-      setConnectionStatus({ ...connectionStatus, checking: true });
-      await critterCraftAPI.connect();
-      
-      setConnectionStatus({ 
-        connected: critterCraftAPI.isConnected, 
-        checking: false 
-      });
-      
-      notification.success({
-        message: 'Connected',
-        description: 'Successfully reconnected to the blockchain.',
-      });
-      
-      // Refresh data
-      fetchJobs();
-    } catch (error) {
-      setConnectionStatus({ connected: false, checking: false });
-      handleError(error, 'reconnection');
-    }
-  };
-  
-  // Set up automatic reconnection attempts
-  useEffect(() => {
-    let reconnectInterval = null;
-    
-    // If not connected, try to reconnect every 30 seconds
-    if (!connectionStatus.connected && !connectionStatus.checking) {
-      reconnectInterval = setInterval(() => {
-        console.log('Attempting automatic reconnection...');
-        retryConnection();
-      }, 30000); // Try every 30 seconds
-    }
-    
-    // Clean up interval on unmount or when connection status changes
-    return () => {
-      if (reconnectInterval) {
-        clearInterval(reconnectInterval);
-      }
-    };
-  }, [connectionStatus.connected, connectionStatus.checking]);
-  
-  // Set up periodic job data refresh
-  useEffect(() => {
-    let refreshInterval = null;
-    
-    // Only set up refresh if connected
-    if (connectionStatus.connected) {
-      refreshInterval = setInterval(() => {
-        console.log('Auto-refreshing job data...');
-        // Don't show loading indicator for auto-refresh
-        fetchJobs();
-      }, 60000); // Refresh every minute
-    }
-    
-    // Clean up interval on unmount or when connection status changes
-    return () => {
-      if (refreshInterval) {
-        clearInterval(refreshInterval);
-      }
-    };
-  }, [connectionStatus.connected]);
-
-  /**
-   * Start a new job
-   * @returns {Promise<void>}
-   */
-  const handleStartJob = async () => {
-    if (!selectedPet) {
-      notification.warning({
-        message: 'No pet selected',
-        description: 'Please select a pet for the job.',
-      });
-      return;
-    }
-
-    try {
-      setActionLoading(true);
-      
-      // Convert string values to enum indices
-      const jobTypeIndex = jobTypes.findIndex(type => type.value === selectedJobType);
-      
-      // Get the selected job type for the success message
-      const selectedJobTypeInfo = jobTypes.find(type => type.value === selectedJobType);
-      
-      await critterCraftAPI.startJob(
-        selectedPet,
-        jobTypeIndex,
-        duration
-      );
-      
-      notification.success({
-        message: 'Job Started',
-        description: `Your pet has started a ${selectedJobTypeInfo.label} job!`,
-      });
-      
-      setStartJobModalVisible(false);
-      fetchJobs();
-    } catch (error) {
-      handleError(error, 'starting job');
-      
-      // Add a reconnect button if it's a connection error
-      if (error instanceof ConnectionError) {
-        notification.info({
-          message: 'Reconnection Available',
-          description: 'You can try to reconnect to the blockchain.',
-          btn: <Button type="primary" onClick={retryConnection}>Reconnect</Button>,
-          duration: 10,
-        });
-      }
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  /**
-   * Complete a job
-   * @param {string|number} jobId - ID of the job to complete
-   * @returns {Promise<void>}
-   */
-  const handleCompleteJob = async (jobId) => {
-    try {
-      setActionLoading(true);
-      
-      await critterCraftAPI.completeJob(jobId);
-      
-      notification.success({
-        message: 'Job Completed',
-        description: 'The job has been completed successfully!',
-        icon: <CheckCircleOutlined style={{ color: '#52c41a' }} />,
-      });
-      
-      fetchJobs();
-    } catch (error) {
-      handleError(error, 'completing job');
-      
-      // Add a reconnect button if it's a connection error
-      if (error instanceof ConnectionError) {
-        notification.info({
-          message: 'Reconnection Available',
-          description: 'You can try to reconnect to the blockchain.',
-          btn: <Button type="primary" onClick={retryConnection}>Reconnect</Button>,
-          duration: 10,
-        });
-      }
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  /**
-   * Cancel a job
-   * @param {string|number} jobId - ID of the job to cancel
-   * @returns {Promise<void>}
-   */
-  const handleCancelJob = async (jobId) => {
-    try {
-      setActionLoading(true);
-      
-      await critterCraftAPI.cancelJob(jobId);
-      
-      notification.success({
-        message: 'Job Canceled',
-        description: 'The job has been canceled successfully.',
-        icon: <CloseCircleOutlined style={{ color: '#ff4d4f' }} />,
-      });
-      
-      fetchJobs();
-    } catch (error) {
-      handleError(error, 'canceling job');
-      
-      // Add a reconnect button if it's a connection error
-      if (error instanceof ConnectionError) {
-        notification.info({
-          message: 'Reconnection Available',
-          description: 'You can try to reconnect to the blockchain.',
-          btn: <Button type="primary" onClick={retryConnection}>Reconnect</Button>,
-          duration: 10,
-        });
-      }
-    } finally {
-      setActionLoading(false);
-    }
+  const handleStartJob = () => {
+    startJob(selectedPet, selectedJobType, duration);
+    setStartJobModalVisible(false);
   };
 
   /**

@@ -34,9 +34,9 @@ const PetStatusCard = ({ petId }) => {
           critterCraftAPI.getPet(petId),
           critterCraftAPI.getPetStatus(petId),
           critterCraftAPI.getPetNeeds(petId),
-          critterCraftAPI.getPetStats(petId)
+          critterCraftAPI.getPetStats(petId),
         ]);
-        
+
         setPet(petData);
         setPetStatus(statusData);
         setPetNeeds(needsData);
@@ -52,7 +52,9 @@ const PetStatusCard = ({ petId }) => {
       }
     };
 
-    fetchPetData();
+    if (petId) {
+      fetchPetData();
+    }
   }, [petId]);
 
   // Perform a care action

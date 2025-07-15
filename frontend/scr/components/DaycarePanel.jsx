@@ -59,63 +59,39 @@ const DaycarePanel = ({ pets = [] }) => {
 
   // Fetch daycares and listings on component mount
   useEffect(() => {
-    fetchDaycares();
-    fetchListings();
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        setRefreshing(true);
+
+        const [myDaycareIds, myListingsData, caregiverListingsData] = await Promise.all([
+          critterCraftAPI.getDaycaresByOwner(),
+          critterCraftAPI.getListingsByOwner(),
+          critterCraftAPI.getListingsByCaregiver()
+        ]);
+
+        const myDaycaresPromises = myDaycareIds.map(id => critterCraftAPI.getDaycare(id));
+        const myDaycaresData = await Promise.all(myDaycaresPromises);
+
+        setMyDaycares(myDaycaresData);
+        setAvailableDaycares([]); // Mock data would go here
+        setMyListings(myListingsData);
+        setCaregiverListings(caregiverListingsData);
+
+      } catch (error) {
+        console.error('Failed to fetch data:', error);
+        notification.error({
+          message: 'Failed to fetch data',
+          description: error.message,
+        });
+      } finally {
+        setLoading(false);
+        setRefreshing(false);
+      }
+    };
+
+    fetchData();
   }, []);
-
-  // Fetch daycares
-  const fetchDaycares = async () => {
-    try {
-      setRefreshing(true);
-      
-      // Fetch daycares owned by the current user
-      const myDaycareIds = await critterCraftAPI.getDaycaresByOwner();
-      const myDaycaresPromises = myDaycareIds.map(id => critterCraftAPI.getDaycare(id));
-      const myDaycaresData = await Promise.all(myDaycaresPromises);
-      
-      // Fetch all available daycares (this is a placeholder - in a real app, you'd have an API for this)
-      // For now, we'll just use a mock
-      const availableDaycaresData = []; // Mock data would go here
-      
-      setMyDaycares(myDaycaresData);
-      setAvailableDaycares(availableDaycaresData);
-    } catch (error) {
-      console.error('Failed to fetch daycares:', error);
-      notification.error({
-        message: 'Failed to fetch daycares',
-        description: error.message,
-      });
-    } finally {
-      setRefreshing(false);
-    }
-  };
-
-  // Fetch listings
-  const fetchListings = async () => {
-    try {
-      setRefreshing(true);
-      
-      // Fetch listings for pets owned by the current user
-      // This is a placeholder - in a real app, you'd have an API for this
-      const myListingsData = []; // Mock data would go here
-      
-      // Fetch listings where the current user is the caregiver
-      // This is a placeholder - in a real app, you'd have an API for this
-      const caregiverListingsData = []; // Mock data would go here
-      
-      setMyListings(myListingsData);
-      setCaregiverListings(caregiverListingsData);
-    } catch (error) {
-      console.error('Failed to fetch listings:', error);
-      notification.error({
-        message: 'Failed to fetch listings',
-        description: error.message,
-      });
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
 
   // Create a new daycare
   const handleCreateDaycare = async () => {
