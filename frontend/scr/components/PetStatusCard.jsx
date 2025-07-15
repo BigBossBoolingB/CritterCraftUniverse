@@ -30,17 +30,11 @@ const PetStatusCard = ({ petId }) => {
     const fetchPetData = async () => {
       try {
         setLoading(true);
-        const [petData, statusData, needsData, statsData] = await Promise.all([
-          critterCraftAPI.getPet(petId),
-          critterCraftAPI.getPetStatus(petId),
-          critterCraftAPI.getPetNeeds(petId),
-          critterCraftAPI.getPetStats(petId),
-        ]);
-
-        setPet(petData);
+        const statusData = await critterCraftAPI.getPetStatus(petId);
+        setPet(statusData);
         setPetStatus(statusData);
-        setPetNeeds(needsData);
-        setPetStats(statsData);
+        setPetNeeds(statusData);
+        setPetStats(statusData);
       } catch (error) {
         console.error('Failed to fetch pet data:', error);
         notification.error({
@@ -61,41 +55,23 @@ const PetStatusCard = ({ petId }) => {
   const performCareAction = async (action) => {
     try {
       setActionLoading(true);
-      
-      let result;
-      switch (action) {
-        case 'feed':
-          result = await critterCraftAPI.feedPet(petId);
-          break;
-        case 'rest':
-          result = await critterCraftAPI.restPet(petId);
-          break;
-        case 'play':
-          result = await critterCraftAPI.playWithPet(petId);
-          break;
-        case 'groom':
-          result = await critterCraftAPI.groomPet(petId);
-          break;
-        default:
-          throw new Error('Invalid action');
+      const result = await critterCraftAPI.interactWithPet(petId, action);
+      if (result.success) {
+        const statusData = await critterCraftAPI.getPetStatus(petId);
+        setPet(statusData);
+        setPetStatus(statusData);
+        setPetNeeds(statusData);
+        setPetStats(statusData);
+        notification.success({
+          message: 'Action successful',
+          description: result.message,
+        });
+      } else {
+        notification.error({
+          message: 'Action failed',
+          description: result.message,
+        });
       }
-      
-      // Refresh pet data
-      const [statusData, needsData] = await Promise.all([
-        critterCraftAPI.getPetStatus(petId),
-        critterCraftAPI.getPetNeeds(petId)
-      ]);
-      
-      setPetStatus(statusData);
-      setPetNeeds(needsData);
-      
-      notification.success({
-        message: 'Action successful',
-        description: `Your pet has been ${action === 'feed' ? 'fed' : 
-                                         action === 'rest' ? 'rested' : 
-                                         action === 'play' ? 'played with' : 
-                                         'groomed'} successfully!`,
-      });
     } catch (error) {
       console.error(`Failed to ${action} pet:`, error);
       notification.error({

@@ -1,0 +1,35 @@
+{
+    "name": "Test Pet",
+    "species": "sprite_glow",
+    "aura_color": "aura-blue",
+    "id": "46f672f7-f96f-4ebd-82c8-d5a79ec8d9eb",
+    "hunger": 20,
+    "energy": 90,
+    "happiness": 65,
+    "iq": 20,
+    "charisma": 10,
+    "cleanliness": 70,
+    "social": 50,
+    "mood": "Neutral",
+    "personality_traits": {
+        "playfulness": 50,
+        "curiosity": 50,
+        "sociability": 50,
+        "independence": 50,
+        "loyalty": 50,
+        "adventurousness": 50,
+        "intelligence": 50,
+        "empathy": 50,
+        "calmness": 50,
+        "stubbornness": 50
+    },
+    "creation_timestamp": 1752554684892179088,
+    "last_active_timestamp": 1752554684892179577,
+    "interaction_history": [
+        {
+            "timestamp": 1752554684893550408,
+            "type": "feed",
+            "details": "Fed the pet"
+        }
+    ]
+}

@@ -274,9 +274,7 @@ PET_ARCHETYPES = {
         'traits': ['curious', 'playful', 'energetic'],
         'rarity': 'Common',
         'base_stats_modifier': {'energy': 10, 'iq': 5}, # Start with more energy and intelligence
-        'aura_effect_modifier': {'energy': 0.1, 'happiness': 0.05},,, # Aura effects are 10% more potent for this species
-        'aging_rate': 6  # Ages 6x faster than humans after first year
-        'aging_rate': 6  # Ages 6x faster than humans after first year
+        'aura_effect_modifier': {'energy': 0.1, 'happiness': 0.05}, # Aura effects are 10% more potent for this species
         'aging_rate': 6  # Ages 6x faster than humans after first year
     },
     'sprite_crystal': {
@@ -285,9 +283,7 @@ PET_ARCHETYPES = {
         'traits': ['calm', 'wise', 'patient'],
         'rarity': 'Uncommon',
         'base_stats_modifier': {'happiness': 5, 'social': -10}, # Slightly happier, less social
-        'trait_modifiers': {'playfulness': -0.1, 'curiosity': 0.05},,, # 10% less playful, 5% more curious over time
-        'aging_rate': 4  # Ages 4x faster than humans after first year
-        'aging_rate': 4  # Ages 4x faster than humans after first year
+        'trait_modifiers': {'playfulness': -0.1, 'curiosity': 0.05}, # 10% less playful, 5% more curious over time
         'aging_rate': 4  # Ages 4x faster than humans after first year
     },
     'sprite_shadow': {

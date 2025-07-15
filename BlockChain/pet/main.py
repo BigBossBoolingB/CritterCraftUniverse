@@ -73,7 +73,7 @@ def get_choice_from_dict(prompt_text, data_dict):
             print("Invalid input. Please enter a number.")
 
 # --- Pet Management Functions ---
-def create_new_pet():
+def create_new_pet(name=None, species=None, aura_color=None):
     """Create a new pet with user input."""
     clear_screen()
     print_header()
@@ -81,21 +81,24 @@ def create_new_pet():
     print()
 
     # Get pet name
-    name = get_valid_input(
-        "What would you like to name your pet? ",
-        lambda n: n and 1 <= len(n) <= MAX_PET_NAME_LENGTH and all(c.isprintable() for c in n),
-        f"Please enter a valid name (1-{MAX_PET_NAME_LENGTH} printable characters)."
-    )
+    if name is None:
+        name = get_valid_input(
+            "What would you like to name your pet? ",
+            lambda n: n and 1 <= len(n) <= MAX_PET_NAME_LENGTH and all(c.isprintable() for c in n),
+            f"Please enter a valid name (1-{MAX_PET_NAME_LENGTH} printable characters)."
+        )
 
-    print("\nAvailable Pet Species:")
-    species = get_choice_from_dict(
-        "\nSelect a species: ", PET_ARCHETYPES
-    )
+    if species is None:
+        print("\nAvailable Pet Species:")
+        species = get_choice_from_dict(
+            "\nSelect a species: ", PET_ARCHETYPES
+        )
 
-    print("\nAvailable Aura Colors:")
-    aura_color = get_choice_from_dict(
-        "\nSelect an aura color: ", PET_AURA_COLORS
-    )
+    if aura_color is None:
+        print("\nAvailable Aura Colors:")
+        aura_color = get_choice_from_dict(
+            "\nSelect an aura color: ", PET_AURA_COLORS
+        )
 
     # Create the pet
     pet = Pet(name=name, species=species, aura_color=aura_color)
@@ -103,26 +106,34 @@ def create_new_pet():
     print(f"\nCongratulations! {pet.name} the {PET_ARCHETYPES[species]['display_name']} has been created with a {PET_AURA_COLORS[aura_color]['display_name']} aura!")
     return pet, pet_manager
 
-def load_pet():
+def load_pet(pet_id=None):
     """Load a pet from the save file if it exists."""
     if not os.path.exists(SAVE_FILE_PATH):
-        return None, None
+        pet, pet_manager = create_new_pet()
+        save_pet(pet)
+        return pet, pet_manager
 
     try:
         with open(SAVE_FILE_PATH, 'r') as f:
             pet_json = f.read()
             if not pet_json:
                 print(f"Warning: {SAVE_FILE_PATH} is empty. Starting new pet.")
-                return None, None
+                pet, pet_manager = create_new_pet()
+                save_pet(pet)
+                return pet, pet_manager
             pet = Pet.from_dict(json.loads(pet_json))
             pet_manager = PetLogicManager(pet)
             return pet, pet_manager
     except json.JSONDecodeError:
         print(f"Error: Corrupted pet data in {SAVE_FILE_PATH}. Starting new pet.")
-        return None, None
+        pet, pet_manager = create_new_pet()
+        save_pet(pet)
+        return pet, pet_manager
     except Exception as e:
         print(f"An unexpected error occurred while loading pet: {e}. Starting new pet.")
-        return None, None
+        pet, pet_manager = create_new_pet()
+        save_pet(pet)
+        return pet, pet_manager
 
 def save_pet(pet):
     """Save the pet to a file."""
@@ -259,5 +270,48 @@ def main():
     # Enter the main game loop
     main_menu(pet, pet_manager)
 
+from flask import Flask, jsonify, request
+
+app = Flask(__name__)
+
+@app.route('/api/pet/status/<pet_id>', methods=['GET'])
+def get_pet_status(pet_id):
+    pet, _ = load_pet(pet_id)
+    if pet and pet.id == pet_id:
+        return jsonify(pet.to_dict())
+    return jsonify({'error': 'Pet not found'}), 404
+
+@app.route('/api/pet/interact', methods=['POST'])
+def interact_with_pet():
+    data = request.get_json()
+    pet_id = data.get('pet_id')
+    interaction_type = data.get('interaction_type')
+
+    pet, pet_manager = load_pet(pet_id)
+    if not pet or pet.id != pet_id:
+        return jsonify({'error': 'Pet not found'}), 404
+
+    if interaction_type == 'feed':
+        feedback_message = pet_manager.feed()
+        success = True
+    elif interaction_type == 'play':
+        try:
+            feedback_message = pet_manager.play()
+            success = True
+        except Exception as e:
+            feedback_message = str(e)
+            success = False
+    else:
+        return jsonify({'error': 'Invalid interaction type'}), 400
+
+    save_pet(pet)
+    return jsonify({'success': success, 'message': feedback_message})
+
+@app.route('/api/user/wallet/<user_id>', methods=['GET'])
+def get_user_wallet(user_id):
+    # This is a mock implementation
+    return jsonify({'qrasl_balance': 100})
+
+
 if __name__ == "__main__":
-    main()
+    app.run(debug=True)

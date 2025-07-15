@@ -18,10 +18,13 @@ from dataclasses import dataclass, field, asdict
 from enum import Enum
 
 # Import constants from the centralized config file
-from pet.config import (
+from ..config import (
     Stat, Mood as ConfigMood, PersonalityTrait as ConfigPersonalityTrait,
-    GenesisPetConfig
+    GenesisPetConfig, PET_ARCHETYPES, PET_AURA_COLORS, AI_PERSONALITY_TRAITS
 )
+
+MOOD_THRESHOLD_HAPPY = 75
+MOOD_THRESHOLD_SAD = 25
 
 # --- Custom Exceptions for Clarity ---
 class PetError(Exception):
@@ -150,21 +153,21 @@ class Pet:
             raise PetInitializationError("Pet name must be 1-20 printable characters.")
         
         # Validate species and aura color against config
-        if self.species not in GenesisPetConfig.Archetypes.DEFINITIONS:
+        if self.species not in PET_ARCHETYPES:
             raise PetInitializationError(f"Invalid species: {self.species}.")
             
-        valid_auras = GenesisPetConfig.Auras.DEFINITIONS.keys()
+        valid_auras = PET_AURA_COLORS.keys()
         if self.aura_color not in valid_auras:
             raise PetInitializationError(f"Invalid aura color: {self.aura_color}.")
         
         # Apply species-specific stat modifiers
-        species_info = GenesisPetConfig.Archetypes.DEFINITIONS.get(self.species, {})
-        stat_modifiers = species_info.get('stat_modifiers', {})
+        species_info = PET_ARCHETYPES.get(self.species, {})
+        stat_modifiers = species_info.get('base_stats_modifier', {})
         
         for stat, modifier in stat_modifiers.items():
-            if hasattr(self, stat.name.lower()):
-                current_value = getattr(self, stat.name.lower())
-                setattr(self, stat.name.lower(), 
+            if hasattr(self, stat.lower()):
+                current_value = getattr(self, stat.lower())
+                setattr(self, stat.lower(),
                         max(0, min(GenesisPetConfig.Core.MAX_STAT, current_value + modifier)))
         
         # Initial mood will be set by the manager after creation

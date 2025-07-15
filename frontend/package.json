@@ -29,6 +29,7 @@
     "three": "^0.158.0",
     "zustand": "^4.4.6"
   },
+  "proxy": "http://localhost:5000",
   "devDependencies": {
     "@testing-library/jest-dom": "^6.1.4",
     "@testing-library/react": "^14.1.2",
