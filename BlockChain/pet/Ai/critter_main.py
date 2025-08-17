@@ -12,7 +12,7 @@ from critter_core import Critter, ZoologistJournal, CraftingMaterial, Adaptation
 
 # Add the project root to the path to allow importing chronos_integration
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../..')))
-from chronos_integration.acausal_engine import PetDNA, acausal_breeder, meta_symmetry_analyzer
+from chronos_integration.acausal_engine import PetDNA, AcausalBreedingResult, acausal_breeder, meta_symmetry_analyzer
 import hashlib
 
 from config import CritterCraftConfig
@@ -531,62 +531,70 @@ MENU_ACAUSAL_BREEDING = '6'
 # --- Chronos Initiative Demonstration ---
 def demonstrate_acausal_breeding():
     """
-    Demonstrates the Chronos Acausal Engine by predicting an optimal
-    offspring from two parent critters.
+    Demonstrates the enhanced Chronos Acausal Engine, including the
+    Proof of Acausality and Temporal Divergence metrics.
     """
     clear_screen()
     print_header()
-    print("=" * 60)
-    print("  CHRONOS INITIATIVE - ACUASAL BREEDING SIMULATION (Ψ)")
-    print("=" * 60)
+    print("=" * 70)
+    print("  CHRONOS INITIATIVE - ENHANCED ACUASAL BREEDING SIMULATION (Ψ v2.0)")
+    print("=" * 70)
     print("\nThis simulation uses the Acausal Engine to pre-compute potential")
     print("future timelines and select an optimal offspring.")
     print("\nInitializing parent genetic material...")
-    time.sleep(2)
+    time.sleep(1)
 
-    # Create two sample parent pets.
-    # In a real implementation, these would be selected from the user's gallery.
-    parent1_dna_hash = hashlib.sha256(b"ParentOneGeneticCode").hexdigest()
+    # Create two sample parent pets with home environments
     parent1 = PetDNA(
-        dna_hash=parent1_dna_hash,
-        base_strength=150,
-        base_agility=120,
-        base_intelligence=130,
-        base_vitality=160
+        dna_hash=hashlib.sha256(b"ParentOneGeneticCode").hexdigest(),
+        base_strength=150, base_agility=120, base_intelligence=130, base_vitality=160,
+        home_environment="forest"
     )
-
-    parent2_dna_hash = hashlib.sha256(b"ParentTwoGeneticCode").hexdigest()
     parent2 = PetDNA(
-        dna_hash=parent2_dna_hash,
-        base_strength=140,
-        base_agility=130,
-        base_intelligence=125,
-        base_vitality=155
+        dna_hash=hashlib.sha256(b"ParentTwoGeneticCode").hexdigest(),
+        base_strength=140, base_agility=130, base_intelligence=125, base_vitality=155,
+        home_environment="ocean"
     )
 
-    print("\n--- Parent 1: 'Alpha' ---")
+    print("\n--- Parent 1: 'Alpha' (Environment: Forest) ---")
     print(f"  DNA Hash: {parent1.dna_hash[:16]}...")
-    print(f"  Stats (S/A/I/V): {parent1.base_strength}/{parent1.base_agility}/{parent1.base_intelligence}/{parent1.base_vitality}")
-    parent1_potential = meta_symmetry_analyzer(parent1.dna_hash)
-    print(f"  Latent Potential (Γ): {parent1_potential:.2f}")
+    parent1_potential = meta_symmetry_analyzer(parent1.dna_hash, parent1.home_environment)
+    print(f"  Latent Potential (Γ): {parent1_potential:.3f}")
 
-    print("\n--- Parent 2: 'Omega' ---")
+    print("\n--- Parent 2: 'Omega' (Environment: Ocean) ---")
     print(f"  DNA Hash: {parent2.dna_hash[:16]}...")
-    print(f"  Stats (S/A/I/V): {parent2.base_strength}/{parent2.base_agility}/{parent2.base_intelligence}/{parent2.base_vitality}")
-    parent2_potential = meta_symmetry_analyzer(parent2.dna_hash)
-    print(f"  Latent Potential (Γ): {parent2_potential:.2f}")
+    parent2_potential = meta_symmetry_analyzer(parent2.dna_hash, parent2.home_environment)
+    print(f"  Latent Potential (Γ): {parent2_potential:.3f}")
 
     print("\nEngaging Acausal Engine... Simulating 5 future states...")
-    time.sleep(3)
+    time.sleep(2)
 
-    # Use the acausal breeder to predict the optimal offspring
-    optimal_offspring = acausal_breeder(parent1, parent2)
+    # Use the acausal breeder to get the comprehensive result
+    result = acausal_breeder(parent1, parent2)
+    optimal_offspring = result.optimal_offspring
+    standard_offspring = result.standard_offspring
 
-    print("\n--- Optimal Offspring 'Prometheus' (Predicted) ---")
-    print(f"  Acausally-Chosen DNA Hash: {optimal_offspring.dna_hash[:16]}...")
-    print(f"  Predicted Stats (S/A/I/V): {optimal_offspring.base_strength}/{optimal_offspring.base_agility}/{optimal_offspring.base_intelligence}/{optimal_offspring.base_vitality}")
-    offspring_potential = meta_symmetry_analyzer(optimal_offspring.dna_hash)
-    print(f"  Discovered Latent Potential (Γ): {offspring_potential:.2f}")
+    print("\n--- [Ci'χ] Quantum Proof of State: Simulated Timelines ---")
+    print("The engine analyzed the following potential offspring:")
+    print("-" * 60)
+    print(f"{'Timeline':<10} | {'DNA Hash Preview':<20} | {'Stats (S/A/I/V)':<25} | {'Potential (Γ)'}")
+    print("-" * 60)
+    for i, log_entry in enumerate(result.proof_of_causality_log, 1):
+        is_chosen = " (*)" if log_entry['dna_hash_preview'] == f"{optimal_offspring.dna_hash[:16]}..." else ""
+        print(f"  {i:<8} | {log_entry['dna_hash_preview']:<20} | {log_entry['stats']:<25} | {log_entry['potential_score']:.3f}{is_chosen}")
+    print("-" * 60)
+
+    print("\n--- Standard Breeding Outcome (Baseline) ---")
+    print(f"  DNA Hash: {standard_offspring.dna_hash[:16]}...")
+    print(f"  Stats (S/A/I/V): {standard_offspring.base_strength}/{standard_offspring.base_agility}/{standard_offspring.base_intelligence}/{standard_offspring.base_vitality}")
+
+    print("\n--- Optimal Offspring 'Prometheus' (Acausally Chosen) ---")
+    print(f"  DNA Hash: {optimal_offspring.dna_hash[:16]}...")
+    print(f"  Stats (S/A/I/V): {optimal_offspring.base_strength}/{optimal_offspring.base_agility}/{optimal_offspring.base_intelligence}/{optimal_offspring.base_vitality}")
+
+    print("\n--- [Δ] Entropic Drift / Temporal Divergence ---")
+    print(f"  Score: {result.temporal_divergence_score:.3f}")
+    print("  (This metric quantifies how far the optimal outcome deviates from the standard path)")
 
     print("\nThis offspring represents the most favorable timeline, chosen")
     print("by analyzing hidden symmetries in potential genetic combinations.")
