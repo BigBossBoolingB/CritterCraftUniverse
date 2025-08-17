@@ -7,13 +7,21 @@ This is the command-line interface for creating and interacting with your crafte
 import os
 import time
 import json
+import sys
 from critter_core import Critter, ZoologistJournal, CraftingMaterial, Adaptation
-from config import (
-    CRITTER_TYPES,
-    CRAFTING_MATERIALS,
-    ADAPTATIONS,
-    ZOOLOGIST_LEVELS
-)
+
+# Add the project root to the path to allow importing chronos_integration
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../..')))
+from chronos_integration.acausal_engine import PetDNA, acausal_breeder, meta_symmetry_analyzer
+import hashlib
+
+from config import CritterCraftConfig
+
+# Unpack the nested config for easier use in this script
+CRITTER_TYPES = CritterCraftConfig.CRITTER_TYPES
+CRAFTING_MATERIALS = CritterCraftConfig.CRAFTING_MATERIALS
+ADAPTATIONS = CritterCraftConfig.ADAPTATIONS
+ZOOLOGIST_LEVELS = CritterCraftConfig.ZOOLOGIST_LEVELS
 
 # --- Configuration Constants ---
 SAVE_DIR = "critter_data"
@@ -517,6 +525,75 @@ def adaptation_station(journal):
     
     return
 
+MENU_ACAUSAL_BREEDING = '6'
+
+
+# --- Chronos Initiative Demonstration ---
+def demonstrate_acausal_breeding():
+    """
+    Demonstrates the Chronos Acausal Engine by predicting an optimal
+    offspring from two parent critters.
+    """
+    clear_screen()
+    print_header()
+    print("=" * 60)
+    print("  CHRONOS INITIATIVE - ACUASAL BREEDING SIMULATION (Ψ)")
+    print("=" * 60)
+    print("\nThis simulation uses the Acausal Engine to pre-compute potential")
+    print("future timelines and select an optimal offspring.")
+    print("\nInitializing parent genetic material...")
+    time.sleep(2)
+
+    # Create two sample parent pets.
+    # In a real implementation, these would be selected from the user's gallery.
+    parent1_dna_hash = hashlib.sha256(b"ParentOneGeneticCode").hexdigest()
+    parent1 = PetDNA(
+        dna_hash=parent1_dna_hash,
+        base_strength=150,
+        base_agility=120,
+        base_intelligence=130,
+        base_vitality=160
+    )
+
+    parent2_dna_hash = hashlib.sha256(b"ParentTwoGeneticCode").hexdigest()
+    parent2 = PetDNA(
+        dna_hash=parent2_dna_hash,
+        base_strength=140,
+        base_agility=130,
+        base_intelligence=125,
+        base_vitality=155
+    )
+
+    print("\n--- Parent 1: 'Alpha' ---")
+    print(f"  DNA Hash: {parent1.dna_hash[:16]}...")
+    print(f"  Stats (S/A/I/V): {parent1.base_strength}/{parent1.base_agility}/{parent1.base_intelligence}/{parent1.base_vitality}")
+    parent1_potential = meta_symmetry_analyzer(parent1.dna_hash)
+    print(f"  Latent Potential (Γ): {parent1_potential:.2f}")
+
+    print("\n--- Parent 2: 'Omega' ---")
+    print(f"  DNA Hash: {parent2.dna_hash[:16]}...")
+    print(f"  Stats (S/A/I/V): {parent2.base_strength}/{parent2.base_agility}/{parent2.base_intelligence}/{parent2.base_vitality}")
+    parent2_potential = meta_symmetry_analyzer(parent2.dna_hash)
+    print(f"  Latent Potential (Γ): {parent2_potential:.2f}")
+
+    print("\nEngaging Acausal Engine... Simulating 5 future states...")
+    time.sleep(3)
+
+    # Use the acausal breeder to predict the optimal offspring
+    optimal_offspring = acausal_breeder(parent1, parent2)
+
+    print("\n--- Optimal Offspring 'Prometheus' (Predicted) ---")
+    print(f"  Acausally-Chosen DNA Hash: {optimal_offspring.dna_hash[:16]}...")
+    print(f"  Predicted Stats (S/A/I/V): {optimal_offspring.base_strength}/{optimal_offspring.base_agility}/{optimal_offspring.base_intelligence}/{optimal_offspring.base_vitality}")
+    offspring_potential = meta_symmetry_analyzer(optimal_offspring.dna_hash)
+    print(f"  Discovered Latent Potential (Γ): {offspring_potential:.2f}")
+
+    print("\nThis offspring represents the most favorable timeline, chosen")
+    print("by analyzing hidden symmetries in potential genetic combinations.")
+
+    input("\n\nPress Enter to return to the Main Menu...")
+
+
 # --- Save/Load Functions ---
 def save_critter(critter):
     """Save a critter to a file."""
@@ -585,6 +662,8 @@ def main_menu(journal):
         print(f"{MENU_ADAPTATION_STATION}. Adaptation Station")
         print(f"{MENU_ZOOLOGIST_JOURNAL}. Zoologist's Journal")
         print(f"{MENU_SAVE_EXIT}. Save and Exit")
+        print("-" * 60)
+        print(f"{MENU_ACAUSAL_BREEDING}. Acausal Breeding (Chronos Demo)")
         print("=" * 60)
         
         choice = input("\nEnter your choice: ").strip()
@@ -602,7 +681,10 @@ def main_menu(journal):
         
         elif choice == MENU_ZOOLOGIST_JOURNAL:
             view_zoologist_journal(journal)
-        
+
+        elif choice == MENU_ACAUSAL_BREEDING:
+            demonstrate_acausal_breeding()
+
         elif choice == MENU_SAVE_EXIT:
             save_journal(journal)
             print("\nThank you for playing Critter-Craft! See you next time.")

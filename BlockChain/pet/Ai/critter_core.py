@@ -902,3 +902,135 @@ class CritterPersistence:
         except Exception as e:
             print(f"Error loading critter collection: {e}")
             return critters
+
+@dataclass
+class ZoologistJournal:
+    """
+    Tracks the progress and discoveries of the user (the 'Zoologist').
+    This class was reconstructed based on its usage in critter_main.py
+    to fix a critical ImportError.
+    """
+    username: str
+    critters_created: int = 0
+    animal_facts: Dict[str, Set[str]] = field(default_factory=dict)
+
+    # These would be populated based on level
+    unlocked_materials: List[str] = field(default_factory=list)
+    unlocked_adaptations: List[str] = field(default_factory=list)
+
+    def __post_init__(self):
+        # Initialize unlocks based on current level
+        self._update_unlocks()
+
+    def to_json(self) -> str:
+        """Serializes the journal to a JSON string."""
+        data = {
+            "username": self.username,
+            "critters_created": self.critters_created,
+            # Convert sets to lists for JSON compatibility
+            "animal_facts": {k: list(v) for k, v in self.animal_facts.items()},
+        }
+        return json.dumps(data, indent=4)
+
+    @classmethod
+    def from_json(cls, json_string: str) -> 'ZoologistJournal':
+        """Deserializes a journal from a JSON string."""
+        data = json.loads(json_string)
+        # Convert lists back to sets
+        data['animal_facts'] = {k: set(v) for k, v in data.get('animal_facts', {}).items()}
+
+        # Ensure critters_created is an int
+        critters_created = data.get('critters_created', 0)
+        if not isinstance(critters_created, int):
+            critters_created = 0
+
+        return cls(
+            username=data.get('username', 'Zoologist'),
+            critters_created=critters_created,
+            animal_facts=data.get('animal_facts', {})
+        )
+
+    def add_critter(self):
+        """Increments the count of created critters and checks for level up."""
+        self.critters_created += 1
+        self._update_unlocks()
+
+    def add_animal_fact(self, animal: str, fact: str):
+        """Adds a learned fact about an animal."""
+        if animal not in self.animal_facts:
+            self.animal_facts[animal] = set()
+        self.animal_facts[animal].add(fact)
+
+    def get_level_info(self) -> Dict[str, Any]:
+        """Determines the current zoologist level and progress."""
+        level = 'novice'
+        next_level = None
+        critters_needed_for_next_level = 0
+
+        # Use a more robust config structure if available
+        levels_config = CritterCraftConfig.ZOOLOGIST_LEVELS
+
+        sorted_levels = sorted(levels_config.items(), key=lambda item: item[1]['required_critters'])
+
+        # Find current level
+        for i, (level_name, info) in enumerate(sorted_levels):
+            if self.critters_created >= info['required_critters']:
+                level = level_name
+            else:
+                break
+
+        # Find next level
+        current_level_index = [item[0] for item in sorted_levels].index(level)
+        if current_level_index + 1 < len(sorted_levels):
+            next_level_name, next_level_info = sorted_levels[current_level_index + 1]
+            next_level = next_level_name
+            critters_needed_for_next_level = next_level_info['required_critters']
+        else:
+            next_level = None # Max level
+            critters_needed_for_next_level = self.critters_created
+
+        return {
+            "current_level": level,
+            "next_level": next_level,
+            "critters_created": self.critters_created,
+            "critters_needed_for_next_level": critters_needed_for_next_level,
+            "total_facts_learned": sum(len(facts) for facts in self.animal_facts.values()),
+            "unlocked_materials": self.unlocked_materials,
+            "unlocked_adaptations": self.unlocked_adaptations,
+        }
+
+    def _update_unlocks(self):
+        """Private method to update unlocked items based on the current level."""
+        level_info = self.get_level_info()
+        current_level_name = level_info['current_level']
+
+        unlocked_mats = set()
+        unlocked_adaps = set()
+
+        levels_config = CritterCraftConfig.ZOOLOGIST_LEVELS
+        sorted_levels = sorted(levels_config.items(), key=lambda item: item[1]['required_critters'])
+
+        # Find all levels up to and including the current one
+        current_level_req = levels_config.get(current_level_name, {}).get('required_critters', 0)
+
+        # This logic is based on an assumption of how unlocks work.
+        # A more robust system would define unlocks per level directly.
+        # This is a placeholder to make the demo functional.
+
+        # Let's assume some simple unlocks based on level for now
+        # because the config is sparse.
+        all_materials = list(CritterCraftConfig.CRAFTING_MATERIALS.keys())
+        all_adaptations = list(CritterCraftConfig.ADAPTATIONS.keys())
+
+        if current_level_name == 'novice':
+            unlocked_mats.update(all_materials[:2])
+            unlocked_adaps.update(all_adaptations[:2])
+        elif current_level_name == 'apprentice':
+            unlocked_mats.update(all_materials[:4])
+            unlocked_adaps.update(all_adaptations[:4])
+        else: # Unlock all for higher levels
+            unlocked_mats.update(all_materials)
+            unlocked_adaps.update(all_adaptations)
+
+        self.unlocked_materials = list(unlocked_mats)
+        self.unlocked_adaptations = list(unlocked_adaps)

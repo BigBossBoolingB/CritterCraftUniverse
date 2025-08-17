@@ -231,6 +231,39 @@ class CritterCraftConfig:
         # ... Add other adaptations here ...
     }
 
+    CRAFTING_MATERIALS = {
+        'fur': {
+            'display_name': 'Fur',
+            'description': 'Soft, insulating material that covers many mammals.',
+            'properties': ['insulation', 'warmth', 'texture'],
+            'colors': ['brown', 'black', 'white', 'gray', 'orange']
+        },
+        'scales': {
+            'display_name': 'Scales',
+            'description': 'Overlapping plates that protect reptiles and fish.',
+            'properties': ['protection', 'waterproof', 'flexibility'],
+            'colors': ['green', 'blue', 'red', 'silver', 'gold']
+        },
+        'feathers': {
+            'display_name': 'Feathers',
+            'description': 'Lightweight, insulating structures that cover birds.',
+            'properties': ['flight', 'insulation', 'display'],
+            'colors': ['blue', 'red', 'yellow', 'green', 'purple', 'iridescent']
+        },
+        'shell': {
+            'display_name': 'Shell',
+            'description': 'Hard, protective covering found on mollusks and turtles.',
+            'properties': ['protection', 'strength', 'buoyancy'],
+            'colors': ['brown', 'white', 'patterned', 'iridescent']
+        },
+        'exoskeleton': {
+            'display_name': 'Exoskeleton',
+            'description': 'Hard outer structure that supports and protects insects and crustaceans.',
+            'properties': ['protection', 'structure', 'segmentation'],
+            'colors': ['black', 'brown', 'red', 'blue', 'green']
+        }
+    }
+
     ZOOLOGIST_LEVELS = {
         'novice': {'required_critters': 3, 'unlocks': "Basic Materials"},
         'apprentice': {'required_critters': 7, 'unlocks': "Feathers"},
