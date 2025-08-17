@@ -12,7 +12,8 @@ from critter_core import Critter, ZoologistJournal, CraftingMaterial, Adaptation
 
 # Add the project root to the path to allow importing chronos_integration
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../..')))
-from chronos_integration.acausal_engine import PetDNA, AcausalBreedingResult, acausal_breeder, meta_symmetry_analyzer
+from chronos_integration.acausal_engine import PetDNA, AcausalBreedingResult, acausal_breeder
+from chronos_integration.event_system import EventManager
 import hashlib
 
 from config import CritterCraftConfig
@@ -529,6 +530,49 @@ MENU_ACAUSAL_BREEDING = '6'
 
 
 # --- Chronos Initiative Demonstration ---
+def display_acausal_analytics_dashboard(result: AcausalBreedingResult):
+    """Formats and displays the results of the Acausal Engine in a user-friendly dashboard."""
+    optimal = result.optimal_offspring
+    standard = result.standard_offspring
+    divergence = result.temporal_divergence_score
+
+    print("\n" + "="*70)
+    print("      A C A U S A L   E N G I N E   A N A L Y T I C S   D A S H B O A R D")
+    print("="*70)
+
+    # --- Result Summary ---
+    print("\n[1] BREEDING OUTCOME ANALYSIS")
+    print("-" * 65)
+    print(f"  {'':<25} | {'Standard Outcome':<20} | {'Acausal Outcome (*)'}")
+    print(f"  {'':<25} | {'-'*20} | {'-'*20}")
+    print(f"  {'DNA Hash Preview':<25} | {standard.dna_hash[:16]}... | {optimal.dna_hash[:16]}...")
+    print(f"  {'Strength':<25} | {standard.base_strength:<20} | {optimal.base_strength}")
+    print(f"  {'Agility':<25} | {standard.base_agility:<20} | {optimal.base_agility}")
+    print(f"  {'Intelligence':<25} | {standard.base_intelligence:<20} | {optimal.base_intelligence}")
+    print(f"  {'Vitality':<25} | {standard.base_vitality:<20} | {optimal.base_vitality}")
+    print("-" * 65)
+
+    # --- Temporal Divergence ---
+    print("\n[2] TEMPORAL DIVERGENCE (Δ)")
+    print("-" * 40)
+    print(f"  The Acausal Outcome deviates from the standard path by a score of: {divergence:.3f}")
+    divergence_bar = "#" * int(divergence) + "-" * (20 - int(divergence)) if divergence < 20 else "#" * 20
+    print(f"  Divergence Visualizer: [{divergence_bar}]")
+
+
+    # --- Proof of Causality ---
+    print("\n[3] PROOF OF ACAUSALITY (Ci'χ)")
+    print("-" * 40)
+    print("  The engine simulated these potential timelines:")
+    print("-" * 70)
+    print(f"  {'Timeline':<10} | {'DNA Hash Preview':<20} | {'Stats (S/A/I/V)':<25} | {'Potential (Γ)'}")
+    print("-" * 70)
+    for i, log_entry in enumerate(result.proof_of_causality_log, 1):
+        is_chosen = " (*)" if log_entry['dna_hash_preview'] == f"{optimal.dna_hash[:16]}..." else ""
+        print(f"    {i:<8} | {log_entry['dna_hash_preview']:<20} | {log_entry['stats']:<25} | {log_entry['potential_score']:.3f}{is_chosen}")
+    print("-" * 70)
+
+
 def demonstrate_acausal_breeding():
     """
     Demonstrates the enhanced Chronos Acausal Engine, including the
@@ -541,10 +585,23 @@ def demonstrate_acausal_breeding():
     print("=" * 70)
     print("\nThis simulation uses the Acausal Engine to pre-compute potential")
     print("future timelines and select an optimal offspring.")
-    print("\nInitializing parent genetic material...")
-    time.sleep(1)
+    print("The engine will post an event if a high-potential offspring is found.")
+    print("-" * 70)
+    input("Press Enter to begin the simulation...")
 
-    # Create two sample parent pets with home environments
+    # 1. Set up the Event Manager and handlers
+    event_manager = EventManager()
+
+    def high_potential_alert(result_data: AcausalBreedingResult):
+        print("\n" + "="*70)
+        print(">>> [!] HIGH-POTENTIAL OFFSPRING ALERT (EVENT TRIGGERED) [!]")
+        print(f">>> Temporal Divergence score of {result_data.temporal_divergence_score:.3f} exceeds threshold!")
+        print(">>> This predicted outcome is significantly different from the standard path.")
+        print("="*70)
+
+    event_manager.subscribe("high_potential_offspring_predicted", high_potential_alert)
+
+    # 2. Create parent pets
     parent1 = PetDNA(
         dna_hash=hashlib.sha256(b"ParentOneGeneticCode").hexdigest(),
         base_strength=150, base_agility=120, base_intelligence=130, base_vitality=160,
@@ -556,48 +613,11 @@ def demonstrate_acausal_breeding():
         home_environment="ocean"
     )
 
-    print("\n--- Parent 1: 'Alpha' (Environment: Forest) ---")
-    print(f"  DNA Hash: {parent1.dna_hash[:16]}...")
-    parent1_potential = meta_symmetry_analyzer(parent1.dna_hash, parent1.home_environment)
-    print(f"  Latent Potential (Γ): {parent1_potential:.3f}")
+    # 3. Run the engine, passing the event manager
+    result = acausal_breeder(parent1, parent2, event_manager=event_manager)
 
-    print("\n--- Parent 2: 'Omega' (Environment: Ocean) ---")
-    print(f"  DNA Hash: {parent2.dna_hash[:16]}...")
-    parent2_potential = meta_symmetry_analyzer(parent2.dna_hash, parent2.home_environment)
-    print(f"  Latent Potential (Γ): {parent2_potential:.3f}")
-
-    print("\nEngaging Acausal Engine... Simulating 5 future states...")
-    time.sleep(2)
-
-    # Use the acausal breeder to get the comprehensive result
-    result = acausal_breeder(parent1, parent2)
-    optimal_offspring = result.optimal_offspring
-    standard_offspring = result.standard_offspring
-
-    print("\n--- [Ci'χ] Quantum Proof of State: Simulated Timelines ---")
-    print("The engine analyzed the following potential offspring:")
-    print("-" * 60)
-    print(f"{'Timeline':<10} | {'DNA Hash Preview':<20} | {'Stats (S/A/I/V)':<25} | {'Potential (Γ)'}")
-    print("-" * 60)
-    for i, log_entry in enumerate(result.proof_of_causality_log, 1):
-        is_chosen = " (*)" if log_entry['dna_hash_preview'] == f"{optimal_offspring.dna_hash[:16]}..." else ""
-        print(f"  {i:<8} | {log_entry['dna_hash_preview']:<20} | {log_entry['stats']:<25} | {log_entry['potential_score']:.3f}{is_chosen}")
-    print("-" * 60)
-
-    print("\n--- Standard Breeding Outcome (Baseline) ---")
-    print(f"  DNA Hash: {standard_offspring.dna_hash[:16]}...")
-    print(f"  Stats (S/A/I/V): {standard_offspring.base_strength}/{standard_offspring.base_agility}/{standard_offspring.base_intelligence}/{standard_offspring.base_vitality}")
-
-    print("\n--- Optimal Offspring 'Prometheus' (Acausally Chosen) ---")
-    print(f"  DNA Hash: {optimal_offspring.dna_hash[:16]}...")
-    print(f"  Stats (S/A/I/V): {optimal_offspring.base_strength}/{optimal_offspring.base_agility}/{optimal_offspring.base_intelligence}/{optimal_offspring.base_vitality}")
-
-    print("\n--- [Δ] Entropic Drift / Temporal Divergence ---")
-    print(f"  Score: {result.temporal_divergence_score:.3f}")
-    print("  (This metric quantifies how far the optimal outcome deviates from the standard path)")
-
-    print("\nThis offspring represents the most favorable timeline, chosen")
-    print("by analyzing hidden symmetries in potential genetic combinations.")
+    # 4. Display the results in the new dashboard
+    display_acausal_analytics_dashboard(result)
 
     input("\n\nPress Enter to return to the Main Menu...")
 

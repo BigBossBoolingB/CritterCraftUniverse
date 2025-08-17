@@ -4,6 +4,8 @@ import math
 from dataclasses import dataclass, field
 from typing import List, Optional, Dict
 
+from .event_system import EventManager
+
 # --- QSV-χ-271828182845904523536 Axiomatic Kernel Simulation ---
 # This module is a conceptual implementation of the Acausal Engine,
 # inspired by the Chronos Initiative's architectural blueprint. It
@@ -132,7 +134,11 @@ def standard_breeder(parent1: PetDNA, parent2: PetDNA) -> PetDNA:
     )
 
 
-def acausal_breeder(parent1: PetDNA, parent2: PetDNA) -> AcausalBreedingResult:
+def acausal_breeder(
+    parent1: PetDNA,
+    parent2: PetDNA,
+    event_manager: Optional[EventManager] = None
+) -> AcausalBreedingResult:
     """
     Simulates Acausal Learning (Ψ) by pre-computing potential future
     offspring and selecting the most promising timeline.
@@ -183,9 +189,16 @@ def acausal_breeder(parent1: PetDNA, parent2: PetDNA) -> AcausalBreedingResult:
     # Calculate the temporal divergence from the standard outcome
     divergence_score = _calculate_stat_divergence(best_offspring, standard_offspring)
 
-    return AcausalBreedingResult(
+    result = AcausalBreedingResult(
         optimal_offspring=best_offspring,
         proof_of_causality_log=proof_log,
         temporal_divergence_score=divergence_score,
         standard_offspring=standard_offspring
     )
+
+    # Post an event if a high-potential offspring is found
+    DIVERGENCE_THRESHOLD = 10.0
+    if event_manager and result.temporal_divergence_score > DIVERGENCE_THRESHOLD:
+        event_manager.post("high_potential_offspring_predicted", result)
+
+    return result
