@@ -1,0 +1,11 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Node
+/frontend/node_modules
+
+# Jules scratch
+jules-scratch/

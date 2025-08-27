@@ -109,3 +109,24 @@ def test_get_public_key_not_found(client):
     response = client.get('/get_public_key/non_existent_user_id')
     assert response.status_code == 404
     assert response.get_json()['success'] is False
+
+def test_get_user_profile_success(client):
+    """Test successful retrieval of user profile."""
+    reg_response = client.post('/register', json={'username': 'testuser', 'password': 'password123'})
+    user_id = reg_response.get_json()['user_id']
+
+    login_response = client.post('/login', json={'username': 'testuser', 'password': 'password123'})
+    token = login_response.get_json()['session_token']
+
+    response = client.get('/api/user/profile', headers={'Authorization': f'Bearer {token}'})
+    assert response.status_code == 200
+    data = response.get_json()
+    assert data['success'] is True
+    assert data['profile']['user_id'] == user_id
+    assert data['profile']['username'] == 'testuser'
+
+def test_get_user_profile_no_token(client):
+    """Test failure when no token is provided for profile retrieval."""
+    response = client.get('/api/user/profile')
+    assert response.status_code == 401
+    assert response.get_json()['success'] is False

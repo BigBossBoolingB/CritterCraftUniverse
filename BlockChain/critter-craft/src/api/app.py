@@ -109,6 +109,32 @@ def get_public_key(user_id):
     response, status_code = user_manager.get_public_key(user_id)
     return jsonify(response), status_code
 
+@app.route("/api/user/profile", methods=["GET"])
+def get_user_profile():
+    """
+    User profile retrieval endpoint.
+    Requires a valid session token.
+    """
+    token = None
+    if 'Authorization' in request.headers:
+        auth_header = request.headers['Authorization']
+        if auth_header.startswith('Bearer '):
+            token = auth_header.split(' ')[1]
+
+    if not token:
+        return jsonify({"success": False, "message": "Missing authentication token"}), 401
+
+    validation_response, validation_status = user_manager.validate_session(token)
+
+    if validation_status != 200:
+        return jsonify(validation_response), validation_status
+
+    user_id = validation_response["user_id"]
+
+    profile_response, profile_status = user_manager.get_user_profile(user_id)
+
+    return jsonify(profile_response), profile_status
+
 # The following is not strictly necessary if using a WSGI server like Gunicorn/uWSGI
 # but it's useful for direct script execution and local development.
 if __name__ == '__main__':

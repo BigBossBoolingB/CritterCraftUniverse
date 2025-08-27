@@ -70,3 +70,19 @@ def get_public_key(user_id):
         if user["user_id"] == user_id:
             return {"success": True, "public_key": user["public_key"]}, 200
     return {"success": False, "message": "User not found"}, 404
+
+def get_user_profile(user_id):
+    """
+    Retrieves a user's profile data.
+    """
+    for username, user_data in mock_users.items():
+        if user_data["user_id"] == user_id:
+            return {
+                "success": True,
+                "profile": {
+                    "user_id": user_id,
+                    "username": username,
+                    "public_key": user_data["public_key"]
+                }
+            }, 200
+    return {"success": False, "message": "User not found"}, 404

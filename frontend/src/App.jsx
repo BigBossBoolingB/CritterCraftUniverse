@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Layout, Menu, Button, Spin, notification, Avatar, Typography, Tabs, Card, Modal } from 'antd';
+import { Layout, Menu, Button, Spin, notification, Avatar, Typography, Tabs, Card, Modal, Divider } from 'antd';
 import {
   UserOutlined,
   HomeOutlined,
@@ -10,12 +10,17 @@ import {
   LogoutOutlined,
   LoginOutlined,
   PlusOutlined,
+  DashboardOutlined,
 } from '@ant-design/icons';
 import PetStatusCard from './components/PetStatusCard';
 import MinigamesPanel from './components/MinigamesPanel';
 import JobsPanel from './components/JobsPanel';
 import DaycarePanel from './components/DaycarePanel';
+import UserDashboard from './components/auth/UserDashboard';
 import critterCraftAPI from './crittercraft_api';
+import Login from './components/auth/Login';
+import Register from './components/auth/Register';
+import { logout as apiLogout, validateSession } from './services/auth_api';
 
 const { Header, Content, Footer, Sider } = Layout;
 const { Title, Text } = Typography;
@@ -26,7 +31,7 @@ const { TabPane } = Tabs;
  */
 const App = () => {
   const [collapsed, setCollapsed] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [connecting, setConnecting] = useState(true);
   const [connected, setConnected] = useState(false);
   const [accounts, setAccounts] = useState([]);
@@ -34,12 +39,18 @@ const App = () => {
   const [balance, setBalance] = useState('0');
   const [pets, setPets] = useState([]);
   const [selectedPet, setSelectedPet] = useState(null);
-  const [activeTab, setActiveTab] = useState('home');
+  const [activeTab, setActiveTab] = useState('dashboard');
   const [mintModalVisible, setMintModalVisible] = useState(false);
   const [petName, setPetName] = useState('');
   const [petDescription, setPetDescription] = useState('');
   const [petType, setPetType] = useState(0);
   const [mintLoading, setMintLoading] = useState(false);
+
+  // New state for Web2 auth
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [authMode, setAuthMode] = useState('login'); // 'login' or 'register'
+  const [username, setUsername] = useState('');
+
 
   // Connect to the blockchain on component mount
   useEffect(() => {
@@ -60,7 +71,21 @@ const App = () => {
       }
     };
 
+    const checkSession = async () => {
+      try {
+        const data = await validateSession();
+        if (data.success) {
+          setIsAuthenticated(true);
+          // In a real app, you'd fetch user details here
+          setUsername('User');
+        }
+      } catch (error) {
+        // No valid session, which is fine on initial load
+      }
+    };
+
     connectToBlockchain();
+    checkSession();
   }, []);
 
   // Connect wallet and fetch data when connected
@@ -71,15 +96,18 @@ const App = () => {
       setAccounts(walletAccounts);
       
       if (walletAccounts.length > 0) {
-        setSelectedAccount(walletAccounts[0]);
-        critterCraftAPI.setAccount(walletAccounts[0]);
+        const account = walletAccounts[0];
+        setSelectedAccount(account);
+        critterCraftAPI.setAccount(account);
+        setIsAuthenticated(true); // Consider wallet connection as a form of auth
+        setUsername(account.meta.name);
         
         // Fetch balance
-        const accountBalance = await critterCraftAPI.getBalance(walletAccounts[0].address);
+        const accountBalance = await critterCraftAPI.getBalance(account.address);
         setBalance(accountBalance);
         
         // Fetch pets
-        const petIds = await critterCraftAPI.getPetsByOwner(walletAccounts[0].address);
+        const petIds = await critterCraftAPI.getPetsByOwner(account.address);
         const petsPromises = petIds.map(id => critterCraftAPI.getPet(id));
         const petsData = await Promise.all(petsPromises);
         setPets(petsData);
@@ -100,11 +128,33 @@ const App = () => {
   };
 
   // Disconnect wallet
-  const disconnectWallet = () => {
-    setSelectedAccount(null);
-    setPets([]);
-    setSelectedPet(null);
-    setBalance('0');
+  const handleDisconnect = async () => {
+    // Web2 logout
+    try {
+      await apiLogout();
+    } catch (error) {
+      console.error('Logout failed:', error);
+    } finally {
+      setIsAuthenticated(false);
+      setUsername('');
+    }
+
+    // Web3 disconnect
+    if (selectedAccount) {
+      setSelectedAccount(null);
+      setPets([]);
+      setSelectedPet(null);
+      setBalance('0');
+    }
+  };
+
+  const handleLoginSuccess = (user) => {
+    setIsAuthenticated(true);
+    setUsername(user.username);
+  };
+
+  const handleRegisterSuccess = () => {
+    setAuthMode('login');
   };
 
   // Mint a new pet
@@ -175,21 +225,39 @@ const App = () => {
     );
   }
 
-  // Render wallet connection screen
-  if (!selectedAccount) {
+  // Render login/auth screen
+  if (!isAuthenticated) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', flexDirection: 'column' }}>
-        <Title level={2}>Welcome to CritterCraft</Title>
-        <Text style={{ fontSize: 16, marginBottom: 24 }}>Connect your wallet to start your pet adventure!</Text>
-        <Button 
-          type="primary" 
-          icon={<LoginOutlined />} 
-          onClick={connectWallet} 
-          loading={loading}
-          size="large"
-        >
-          Connect Wallet
-        </Button>
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', flexDirection: 'column', background: '#f0f2f5' }}>
+        <Card>
+          <Title level={2} style={{ textAlign: 'center' }}>Welcome to CritterCraft</Title>
+          {authMode === 'login' ? (
+            <div>
+              <Login onLoginSuccess={handleLoginSuccess} />
+              <Divider>OR</Divider>
+              <Button
+                type="default"
+                icon={<LoginOutlined />}
+                onClick={connectWallet}
+                loading={loading}
+                size="large"
+                block
+              >
+                Connect Wallet
+              </Button>
+              <Text style={{ marginTop: 20, textAlign: 'center', display: 'block' }}>
+                Don't have an account? <Button type="link" onClick={() => setAuthMode('register')}>Register now</Button>
+              </Text>
+            </div>
+          ) : (
+            <div>
+              <Register onRegisterSuccess={handleRegisterSuccess} />
+              <Text style={{ marginTop: 20, textAlign: 'center', display: 'block' }}>
+                Already have an account? <Button type="link" onClick={() => setAuthMode('login')}>Login</Button>
+              </Text>
+            </div>
+          )}
+        </Card>
       </div>
     );
   }
@@ -201,22 +269,25 @@ const App = () => {
           <Title level={5} style={{ color: 'white', margin: 0 }}>CritterCraft</Title>
         </div>
         <Menu theme="dark" selectedKeys={[activeTab]} mode="inline" onSelect={({ key }) => setActiveTab(key)}>
+          <Menu.Item key="dashboard" icon={<DashboardOutlined />}>
+            Dashboard
+          </Menu.Item>
           <Menu.Item key="home" icon={<HomeOutlined />}>
             Home
           </Menu.Item>
-          <Menu.Item key="pet" icon={<HeartOutlined />} disabled={!selectedPet}>
+          <Menu.Item key="pet" icon={<HeartOutlined />} disabled={!selectedPet && !selectedAccount}>
             Pet Status
           </Menu.Item>
-          <Menu.Item key="minigames" icon={<TrophyOutlined />} disabled={!selectedPet}>
+          <Menu.Item key="minigames" icon={<TrophyOutlined />} disabled={!selectedPet && !selectedAccount}>
             Mini-Games
           </Menu.Item>
-          <Menu.Item key="jobs" icon={<DollarOutlined />} disabled={!selectedPet}>
+          <Menu.Item key="jobs" icon={<DollarOutlined />} disabled={!selectedPet && !selectedAccount}>
             Jobs
           </Menu.Item>
           <Menu.Item key="daycare" icon={<TeamOutlined />}>
             Daycare
           </Menu.Item>
-          <Menu.Item key="logout" icon={<LogoutOutlined />} onClick={disconnectWallet}>
+          <Menu.Item key="logout" icon={<LogoutOutlined />} onClick={handleDisconnect}>
             Disconnect
           </Menu.Item>
         </Menu>
@@ -225,20 +296,25 @@ const App = () => {
         <Header style={{ padding: '0 16px', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center' }}>
             <Avatar icon={<UserOutlined />} />
-            <Text style={{ marginLeft: 8 }}>{selectedAccount.meta.name}</Text>
+            <Text style={{ marginLeft: 8 }}>{username}</Text>
           </div>
           <div>
-            <Text strong style={{ marginRight: 16 }}>Balance: {balance}</Text>
+            {selectedAccount && <Text strong style={{ marginRight: 16 }}>Balance: {balance}</Text>}
             <Button 
               type="primary" 
               icon={<PlusOutlined />} 
               onClick={() => setMintModalVisible(true)}
+              disabled={!selectedAccount} // Disable if not connected via wallet
             >
               Mint New Pet
             </Button>
           </div>
         </Header>
         <Content style={{ margin: '16px' }}>
+          {activeTab === 'dashboard' && (
+            <UserDashboard />
+          )}
+
           {activeTab === 'home' && (
             <div>
               <Title level={2}>Welcome to CritterCraft</Title>
@@ -255,10 +331,11 @@ const App = () => {
               ) : pets.length === 0 ? (
                 <Card style={{ textAlign: 'center', padding: 24 }}>
                   <p>You don't have any pets yet.</p>
-                  <Button 
+                   <Button
                     type="primary" 
                     icon={<PlusOutlined />} 
                     onClick={() => setMintModalVisible(true)}
+                    disabled={!selectedAccount}
                   >
                     Mint Your First Pet
                   </Button>
@@ -278,15 +355,15 @@ const App = () => {
             </div>
           )}
 
-          {activeTab === 'pet' && selectedPet && (
+          {activeTab === 'pet' && (selectedPet || selectedAccount) && (
             <PetStatusCard petId={selectedPet} />
           )}
 
-          {activeTab === 'minigames' && selectedPet && (
+          {activeTab === 'minigames' && (selectedPet || selectedAccount) && (
             <MinigamesPanel pets={pets} />
           )}
 
-          {activeTab === 'jobs' && selectedPet && (
+          {active_tab === 'jobs' && (selectedPet || selectedAccount) && (
             <JobsPanel pets={pets} />
           )}
 
