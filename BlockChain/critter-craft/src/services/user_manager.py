@@ -86,3 +86,33 @@ def get_user_profile(user_id):
                 }
             }, 200
     return {"success": False, "message": "User not found"}, 404
+
+def update_user_profile(user_id, new_data):
+    """
+    Updates a user's profile data.
+    For now, only allows updating the username.
+    """
+    old_username = None
+    for username, user_data in mock_users.items():
+        if user_data["user_id"] == user_id:
+            old_username = username
+            break
+
+    if not old_username:
+        return {"success": False, "message": "User not found"}, 404
+
+    new_username = new_data.get("username")
+    if not new_username:
+        return {"success": False, "message": "No new username provided"}, 400
+
+    if new_username != old_username and new_username in mock_users:
+        return {"success": False, "message": "Username already taken"}, 409
+
+    # In-memory update by removing old and adding new
+    user_record = mock_users.pop(old_username)
+    mock_users[new_username] = user_record
+
+    # Placeholder for publishing event to Identity Event Stream
+    print(f"EVENT: User profile updated for user_id {user_id}. Username changed from {old_username} to {new_username}")
+
+    return {"success": True, "message": "Profile updated successfully"}, 200

@@ -135,6 +135,36 @@ def get_user_profile():
 
     return jsonify(profile_response), profile_status
 
+@app.route("/api/user/profile", methods=["PUT"])
+def update_user_profile():
+    """
+    User profile update endpoint.
+    Requires a valid session token and new profile data.
+    """
+    token = None
+    if 'Authorization' in request.headers:
+        auth_header = request.headers['Authorization']
+        if auth_header.startswith('Bearer '):
+            token = auth_header.split(' ')[1]
+
+    if not token:
+        return jsonify({"success": False, "message": "Missing authentication token"}), 401
+
+    validation_response, validation_status = user_manager.validate_session(token)
+
+    if validation_status != 200:
+        return jsonify(validation_response), validation_status
+
+    user_id = validation_response["user_id"]
+
+    new_data = request.get_json()
+    if not new_data:
+        return jsonify({"success": False, "message": "No data provided"}), 400
+
+    update_response, update_status = user_manager.update_user_profile(user_id, new_data)
+
+    return jsonify(update_response), update_status
+
 # The following is not strictly necessary if using a WSGI server like Gunicorn/uWSGI
 # but it's useful for direct script execution and local development.
 if __name__ == '__main__':

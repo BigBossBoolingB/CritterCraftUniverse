@@ -136,3 +136,24 @@ export const getUserProfile = async () => {
     },
   });
 };
+
+/**
+ * Updates the user profile data.
+ * @param {object} profileData - The new profile data.
+ * @returns {Promise<object>} - The server response.
+ */
+export const updateUserProfile = async (profileData) => {
+  const token = localStorage.getItem('session_token');
+  if (!token) {
+    return Promise.reject(new Error('No session token found.'));
+  }
+
+  return fetchAPI(`${API_BASE_URL}/api/user/profile`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+    body: JSON.stringify(profileData),
+  });
+};

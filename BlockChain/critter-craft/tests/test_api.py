@@ -130,3 +130,22 @@ def test_get_user_profile_no_token(client):
     response = client.get('/api/user/profile')
     assert response.status_code == 401
     assert response.get_json()['success'] is False
+
+def test_update_user_profile_success(client):
+    """Test successful update of user profile."""
+    client.post('/register', json={'username': 'testuser', 'password': 'password123'})
+    login_response = client.post('/login', json={'username': 'testuser', 'password': 'password123'})
+    token = login_response.get_json()['session_token']
+
+    update_response = client.put(
+        '/api/user/profile',
+        headers={'Authorization': f'Bearer {token}'},
+        json={'username': 'newtestuser'}
+    )
+    assert update_response.status_code == 200
+    assert update_response.get_json()['success'] is True
+
+    # Verify the change
+    profile_response = client.get('/api/user/profile', headers={'Authorization': f'Bearer {token}'})
+    assert profile_response.status_code == 200
+    assert profile_response.get_json()['profile']['username'] == 'newtestuser'
