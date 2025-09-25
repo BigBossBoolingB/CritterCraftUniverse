@@ -6,3 +6,11 @@ __pycache__/
 
 # Logs
 *.log
+
+# Databases
+*.db
+*.json
+!package.json
+!package-lock.json
+!tsconfig.json
+!tsconfig.node.json
