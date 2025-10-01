@@ -216,7 +216,7 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: '20' # Or specific LTS version like '18.x'
           cache: 'yarn' # or 'npm' or 'pnpm'
