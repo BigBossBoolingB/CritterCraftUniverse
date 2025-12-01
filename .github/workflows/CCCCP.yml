@@ -21,7 +21,7 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install Rust Toolchain (stable)
         # Uses specific Rust action for better integration and caching
@@ -66,7 +66,7 @@ jobs:
     needs: [setup_rust_env] # This job depends on the environment setup passing
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       # Restore Rust environment and caches from setup_rust_env
       - name: Restore Rust Toolchain
@@ -103,7 +103,7 @@ jobs:
     needs: [lint_and_format_rust] # Depends on linting/formatting passing
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       
       # Restore Rust environment and caches
       - name: Restore Rust Toolchain
@@ -138,7 +138,7 @@ jobs:
     needs: [build_node] # Depends on a successful build
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       # Restore Rust environment and caches
       - name: Restore Rust Toolchain
@@ -177,7 +177,7 @@ jobs:
     needs: [build_node] # Can run in parallel with tests, but needs a successful build
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       # Restore Rust environment and caches
       - name: Restore Rust Toolchain
@@ -214,7 +214,7 @@ jobs:
     needs: [setup_rust_env] # Can run in parallel with Rust jobs, no direct dependency on Rust build
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -235,7 +235,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Install Markdown Link Checker
         run: npm install -g markdown-link-check # Or other markdown linting tools
       - name: Check Markdown Links
@@ -254,7 +254,7 @@ jobs:
   #     url: 'https://testnet.crittercraft.com' # URL of your deployed testnet
   #   steps:
   #     - name: Checkout Repository
-  #       uses: actions/checkout@v4
+  #       uses: actions/checkout@v6
   #     - name: Deploy CritterCraft Node & Frontend
   #       # This step would involve commands to deploy the compiled node binary and frontend artifacts
   #       # e.g., using Docker, Kubernetes, or a specific cloud provider's CLI/GitHub Action
@@ -274,7 +274,7 @@ jobs:
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       # Runs a single command using the runners shell
       - name: Run a one-line script
