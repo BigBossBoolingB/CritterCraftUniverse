@@ -2,6 +2,8 @@
 import time
 import os
 import sys
+import json
+from typing import Optional
 
 # Add parent directory to path to allow import if running directly from this folder
 # This setup is for local testing structure, might differ in actual app
@@ -9,8 +11,9 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 if current_dir not in sys.path:
     sys.path.insert(0, current_dir)
 
-from .pet_core import Pet, InteractionRecord # Import Pet class and InteractionRecord
-from .config import LOCAL_STORAGE_KEY, GAME_INTERVAL_SECONDS, PET_ARCHETYPES, PET_AURA_COLORS # Import configs
+from pet_core import Pet, InteractionRecord # Import Pet class and InteractionRecord
+from config import LOCAL_STORAGE_KEY, GAME_INTERVAL_SECONDS, PET_ARCHETYPES, PET_AURA_COLORS, MAX_STAT, FEED_HUNGER_RESTORE, MOOD_THRESHOLD_HAPPY, MIGRATION_READINESS_THRESHOLDS # Import configs
+from trihorn_core import TrihornEngine
 
 # --- Persistence Manager (Simplified for CLI) ---
 # In a real app, this would be a dedicated module or integrated with state management.
@@ -99,17 +102,21 @@ def main():
     current_pet.status()
 
     # Main game loop
+    trihorn = TrihornEngine()
+    print("\n" + trihorn.get_greeting())
+
     while True:
         print("\n--- CritterCraft Command Center ---")
         print("1. Nourish (Feed Pet)")
         print("2. Engage (Play with Pet)")
         print("3. Chronicle (Check Status)")
-        print("4. Let Time Pass (Advance Pet State)")
-        print("5. Forge Genesis (Create New Pet - Saves current & starts new)") # Added for easier testing
-        print("6. Bridge to CritterChain (Prepare for Migration - Conceptual)") # Conceptual feature
-        print("7. Exit (Save & Quit)")
+        print("4. Train with Trihorn (Gain XP & Intelligence)")
+        print("5. Let Time Pass (Advance Pet State)")
+        print("6. Forge Genesis (Create New Pet - Saves current & starts new)") # Added for easier testing
+        print("7. Bridge to CritterChain (Prepare for Migration - Conceptual)") # Conceptual feature
+        print("8. Exit (Save & Quit)")
 
-        choice = input("Enter your choice (1-7): ")
+        choice = input("Enter your choice (1-8): ")
         
         action_taken_that_ticks = True # Assume most actions trigger a tick unless specified
         
@@ -126,14 +133,23 @@ def main():
             print(current_pet.status())
             action_taken_that_ticks = False # Checking status doesn't pass time
         elif choice == '4':
-            print("Time flows onward for your Genesis Pet...")
+            print("\n--- Trihorn Training Module ---")
+            print("Types: [Agility, Strength, Wisdom]")
+            training_type = input("Choose training focus: ")
+            success, msg = current_pet.train(training_type)
+            print("\n" + msg)
+            if not success:
+                action_taken_that_ticks = False
         elif choice == '5':
+            print("Time flows onward for your Genesis Pet...")
+        elif choice == '6':
             # Create New Pet - This action saves the current pet and then starts fresh
             print("Saving current pet and forging a new Genesis...")
             save_pet_to_local_storage(current_pet) # Save current pet before replacing
+            trihorn.save_state() # Save consciousness state
             main() # Recursively call main to start new pet creation flow
             return # Exit this instance of main after recursive call
-        elif choice == '6':
+        elif choice == '7':
             print("\n--- Bridging to CritterChain (Conceptual) ---")
             print("Your Genesis Pet is preparing for its grand journey to the blockchain!")
             
@@ -160,12 +176,13 @@ def main():
             else:
                 print("Continue nurturing your pet to reach full migration readiness!")
             action_taken_that_ticks = False # Conceptual action doesn't pass game time
-        elif choice == '7':
+        elif choice == '8':
             print(f"Goodbye! Saving {current_pet.name}'s state...")
             save_pet_to_local_storage(current_pet)
+            trihorn.save_state()
             break
         else:
-            print("Invalid choice. Please enter a number between 1 and 7.")
+            print("Invalid choice. Please enter a number between 1 and 8.")
             action_taken_that_ticks = False # Invalid choice doesn't pass time
 
         # Only tick the pet if an action was taken that should advance time
