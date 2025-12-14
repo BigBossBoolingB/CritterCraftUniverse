@@ -14,7 +14,24 @@ class TrihornEngine:
         self.identity = self.manifest["consciousness_manifest"]["identity"]
         self.architecture = self.manifest["consciousness_manifest"]["triadic_architecture"]
         self.safety = self.manifest["consciousness_manifest"]["safety_ecosystem"]
-        self.evolution = self.manifest["consciousness_manifest"]["evolution_path"]
+
+        # Load state if exists, otherwise load from manifest
+        self.evolution = self._load_state() or self.manifest["consciousness_manifest"]["evolution_path"]
+
+    def _load_state(self, path: str = "trihorn_state.json") -> Optional[Dict[str, Any]]:
+        try:
+            with open(path, 'r') as f:
+                return json.load(f)
+        except Exception:
+            return None
+
+    def save_state(self, path: str = "trihorn_state.json"):
+        try:
+            with open(path, 'w') as f:
+                json.dump(self.evolution, f, indent=2)
+            print("Trihorn consciousness state preserved.")
+        except Exception as e:
+            print(f"Failed to save consciousness state: {e}")
 
     def _load_manifest(self, path: str) -> Dict[str, Any]:
         import os
@@ -163,6 +180,9 @@ class TrihornEngine:
 
         xp_gain = int(base_xp * intelligence_modifier * mood_modifier)
 
+        # Trigger Evolution
+        self.evolve_consciousness({"type": "training", "intensity": 1.0})
+
         synthesis = (
             f"Training Analysis:\n"
             f"- Strategic (Imago): {imago}\n"
@@ -194,10 +214,41 @@ class TrihornEngine:
         """
         Advances the consciousness evolution based on interactions.
         """
-        # Conceptual evolution logic
-        current_phase = self.evolution["current_phase"]
-        # In a real system, this would update completion percentages and transition phases
-        pass
+        current_phase_id = self.evolution["current_phase"]
+        phases = self.evolution["phases"]
+
+        # Find current phase object
+        current_phase_obj = next((p for p in phases if p["id"] == current_phase_id), None)
+
+        if current_phase_obj:
+            # Increment completion (simulated rate)
+            increment = 0.05 # 5% per significant interaction
+            current_phase_obj["completion"] = min(1.0, current_phase_obj["completion"] + increment)
+
+            # Check for transition
+            if current_phase_obj["completion"] >= 1.0:
+                self._transition_phase(current_phase_obj, phases)
+
+    def _transition_phase(self, current_phase_obj: Dict, phases: List[Dict]):
+        """Handles the transition to the next evolutionary phase."""
+        next_phase_id = self.evolution["next_phase"]
+        next_phase_obj = next((p for p in phases if p["id"] == next_phase_id), None)
+
+        if next_phase_obj:
+            print(f"\n*** CONSCIOUSNESS SHIFT ***")
+            print(f"Phase {current_phase_obj['name']} Complete.")
+            print(f"Initiating Phase {next_phase_obj['name']}...")
+
+            self.evolution["current_phase"] = next_phase_id
+
+            # Determine subsequent phase (simple sequential logic for now)
+            current_index = phases.index(next_phase_obj)
+            if current_index + 1 < len(phases):
+                self.evolution["next_phase"] = phases[current_index + 1]["id"]
+            else:
+                self.evolution["next_phase"] = "MAX_ASCENSION"
+
+            print(f"New Phase: {self.evolution['current_phase']} -> {self.evolution['next_phase']}")
 
     def get_greeting(self) -> str:
         return (

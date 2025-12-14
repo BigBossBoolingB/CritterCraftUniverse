@@ -2,6 +2,7 @@
 import time
 import os
 import sys
+import json
 from typing import Optional
 
 # Add parent directory to path to allow import if running directly from this folder
@@ -101,6 +102,9 @@ def main():
     current_pet.status()
 
     # Main game loop
+    trihorn = TrihornEngine()
+    print("\n" + trihorn.get_greeting())
+
     while True:
         print("\n--- CritterCraft Command Center ---")
         print("1. Nourish (Feed Pet)")
@@ -174,6 +178,7 @@ def main():
         elif choice == '8':
             print(f"Goodbye! Saving {current_pet.name}'s state...")
             save_pet_to_local_storage(current_pet)
+            trihorn.save_state()
             break
         else:
             print("Invalid choice. Please enter a number between 1 and 8.")
