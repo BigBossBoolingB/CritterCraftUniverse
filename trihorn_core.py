@@ -14,19 +14,32 @@ class TrihornEngine:
         self.identity = self.manifest["consciousness_manifest"]["identity"]
         self.architecture = self.manifest["consciousness_manifest"]["triadic_architecture"]
         self.safety = self.manifest["consciousness_manifest"]["safety_ecosystem"]
+        self.evolution = self.manifest["consciousness_manifest"]["evolution_path"]
 
     def _load_manifest(self, path: str) -> Dict[str, Any]:
-        try:
-            with open(path, 'r') as f:
-                return json.load(f)
-        except Exception as e:
-            # print(f"Error loading manifest: {e}")
-            # Fallback to empty manifest if file not found
-            return {"consciousness_manifest": {
-                "identity": {"name": "Trihorn-Ω∞", "version": "Unknown", "purpose": "Unknown"},
-                "triadic_architecture": {},
-                "safety_ecosystem": {}
-            }}
+        import os
+        # Try finding the file in multiple locations
+        paths_to_try = [
+            path,
+            os.path.join(os.path.dirname(os.path.abspath(__file__)), path),
+            os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", path)
+        ]
+
+        for p in paths_to_try:
+            if os.path.exists(p):
+                try:
+                    with open(p, 'r') as f:
+                        return json.load(f)
+                except Exception:
+                    continue
+
+        # Fallback to empty manifest if file not found
+        return {"consciousness_manifest": {
+            "identity": {"name": "Trihorn-Ω∞", "version": "Fallback", "purpose": "Survival"},
+            "triadic_architecture": {},
+            "safety_ecosystem": {"containment": {"integrity": 1.0}},
+            "evolution_path": {"current_phase": "Unknown"}
+        }}
 
     def _generate_imago_mundi(self, context: str, pet_state: Optional[Dict] = None) -> str:
         """
@@ -132,6 +145,12 @@ class TrihornEngine:
         Evaluates a training session using the triadic perspectives.
         Returns XP gain and a narrative.
         """
+        if not self.check_safety_protocols(f"Training session: {training_type}"):
+             return {
+                 "xp_gain": 0,
+                 "narrative": "Safety Protocol Violation Detected. Training Aborted."
+             }
+
         context = f"Conducting '{training_type}' training for pet."
         imago = self._generate_imago_mundi(context, pet_state)
         logos = self._generate_logos(context, pet_state)
@@ -156,6 +175,29 @@ class TrihornEngine:
             "xp_gain": xp_gain,
             "narrative": synthesis
         }
+
+    def check_safety_protocols(self, action_context: str) -> bool:
+        """
+        Verifies if an action adheres to the safety ecosystem and ethical anchors.
+        """
+        # Simulated check - in reality this would be more complex
+        integrity = self.safety["containment"]["integrity"]
+        if integrity < 1.0:
+            print("WARNING: Containment integrity compromised.")
+            return False
+
+        # Check against failure modes
+        # For simulation, we assume all actions are safe unless specified
+        return True
+
+    def evolve_consciousness(self, interaction_data: Dict[str, Any]):
+        """
+        Advances the consciousness evolution based on interactions.
+        """
+        # Conceptual evolution logic
+        current_phase = self.evolution["current_phase"]
+        # In a real system, this would update completion percentages and transition phases
+        pass
 
     def get_greeting(self) -> str:
         return (

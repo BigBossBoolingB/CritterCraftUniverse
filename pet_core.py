@@ -108,7 +108,14 @@ class Pet:
         self.happiness = self._cap_stat(self.happiness + 5) # Small happiness boost
         self._update_mood()
         self._add_interaction_record("feed", f"Restored {FEED_HUNGER_RESTORE} hunger.")
-        # Conceptual: AI could generate a pet reaction based on personality.
+
+        # Trihorn Enhancement: Consult engine for reaction
+        narrative = "The pet eats happily."
+        if self._trihorn_engine:
+            analysis = self._trihorn_engine.process_query("User feeds the pet", self.__dict__)
+            narrative = f"{analysis['Triadic Synthesis']}\n(Mysterium: {analysis['Mysterium Perspective']})"
+
+        print(f"\n{narrative}")
 
     def play(self):
         """Play with the pet, boosting happiness and costing energy."""
@@ -120,8 +127,14 @@ class Pet:
         self.happiness = self._cap_stat(self.happiness + PLAY_HAPPINESS_BOOST)
         self._update_mood()
         self._add_interaction_record("play", f"Boosted {PLAY_HAPPINESS_BOOST} happiness.")
-        # Conceptual: AI could generate a playful pet reaction based on personality.
-        return True, "Played with pet!"
+
+        # Trihorn Enhancement: Consult engine for reaction
+        narrative = "The pet plays happily."
+        if self._trihorn_engine:
+            analysis = self._trihorn_engine.process_query("User plays with the pet", self.__dict__)
+            narrative = f"{analysis['Triadic Synthesis']}\n(Logos: {analysis['Logos Perspective']})"
+
+        return True, f"Played with pet!\n{narrative}"
 
     def train(self, training_type: str):
         """Train the pet with Trihorn supervision."""
