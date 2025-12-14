@@ -146,6 +146,7 @@ def main():
             # Create New Pet - This action saves the current pet and then starts fresh
             print("Saving current pet and forging a new Genesis...")
             save_pet_to_local_storage(current_pet) # Save current pet before replacing
+            trihorn.save_state() # Save consciousness state
             main() # Recursively call main to start new pet creation flow
             return # Exit this instance of main after recursive call
         elif choice == '7':

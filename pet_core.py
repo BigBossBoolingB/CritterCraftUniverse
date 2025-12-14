@@ -155,8 +155,8 @@ class Pet:
 
              # Level up logic
              if self.experience >= self.level * 100:
+                 self.experience -= self.level * 100 # Preserve overflow XP
                  self.level += 1
-                 self.experience = 0
                  self.intelligence += 5
                  level_up_msg = f"\nLEVEL UP! {self.name} is now level {self.level}!"
              else:
@@ -212,10 +212,26 @@ class Pet:
 
     def to_json(self) -> str:
         """Serialize the Pet object to a JSON string for persistence."""
-        # Use a dictionary representation to avoid dataclass serialization complexities if needed,
-        # but direct dataclass serialization to JSON often works with dataclasses.asdict
-        # For simplicity, let's use json.dumps directly on dataclass for V1
-        return json.dumps(self.__dict__, default=str) # default=str handles datetime/UUID if not converted
+        from dataclasses import asdict
+        # Explicitly convert nested dataclasses (InteractionRecord) to dicts
+        # We use asdict for the full tree conversion, then handle non-serializable fields if needed (though asdict handles basics well)
+        # Note: asdict copies the object, so we don't modify self.
+
+        # However, _trihorn_engine is not a field we want to serialize (and it's marked init=False, repr=False but asdict might include it if it was a field?)
+        # _trihorn_engine is defined as field(init=False), so it is excluded from asdict by default? No, asdict includes all fields.
+        # But we set it manually in __post_init__.
+        # Let's use a simpler approach: serialize self.__dict__ but manually convert the history list to dicts.
+
+        data = self.__dict__.copy()
+
+        # Remove non-serializable runtime components
+        if '_trihorn_engine' in data:
+            del data['_trihorn_engine']
+
+        # Convert InteractionRecord objects to dicts
+        data['interaction_history'] = [asdict(rec) for rec in self.interaction_history]
+
+        return json.dumps(data, default=str)
 
     @classmethod
     def from_json(cls, json_string: str) -> 'Pet':
@@ -228,7 +244,15 @@ class Pet:
         data['last_active_timestamp'] = int(data['last_active_timestamp'])
         
         # Reconstruct InteractionRecord objects
-        data['interaction_history'] = [InteractionRecord(**rec) for rec in data.get('interaction_history', [])]
+        history = []
+        for rec in data.get('interaction_history', []):
+            if isinstance(rec, dict):
+                history.append(InteractionRecord(**rec))
+            else:
+                # Fallback if it somehow got deserialized as an object already (unlikely with json.loads)
+                # or if it's junk data
+                pass
+        data['interaction_history'] = history
         
         # Ensure personality_traits is a dict even if missing (from old data)
         data['personality_traits'] = data.get('personality_traits', {})
