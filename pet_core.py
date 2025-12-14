@@ -5,18 +5,21 @@ import uuid
 from typing import Dict, Any, List, Optional
 from dataclasses import dataclass, field
 
-from .config import ( # Import constants from config
+from config import ( # Import constants from config
     MAX_STAT, STAT_DECAY_RATE, HAPPINESS_DECAY_RATE,
     FEED_HUNGER_RESTORE, PLAY_HAPPINESS_BOOST, PLAY_ENERGY_COST,
     MOOD_THRESHOLD_HAPPY, MOOD_THRESHOLD_SAD,
-    PET_ARCHETYPES, PET_AURA_COLORS, AI_PERSONALITY_TRAITS # For initial pet creation
+    PET_ARCHETYPES, PET_AURA_COLORS, AI_PERSONALITY_TRAITS, # For initial pet creation
+    GAME_INTERVAL_SECONDS
 )
+
+from trihorn_core import TrihornEngine
 
 @dataclass
 class InteractionRecord:
     """Represents a single interaction event with the pet."""
     timestamp: int     # Unix nanoseconds
-    type: str          # e.g., "feed", "play", "chat"
+    type: str          # e.g., "feed", "play", "chat", "train"
     details: Optional[str] = None # Optional details, e.g., "fed_berry"
 
 @dataclass
@@ -25,16 +28,21 @@ class Pet:
     Represents a CritterCraft Genesis Pet.
     This is the core data model for our AI digital companion.
     """
-    id: str = field(default_factory=lambda: str(uuid.uuid4())) # Unique ID for potential blockchain migration
     name: str
     species: str            # e.g., 'sprite_glow', 'sprite_crystal'
     aura_color: str         # e.g., 'aura-blue', 'aura-gold'
+    id: str = field(default_factory=lambda: str(uuid.uuid4())) # Unique ID for potential blockchain migration
     
     # Core Vitals (0-MAX_STAT)
     hunger: int = 50
     happiness: int = 50
     energy: int = 50
     
+    # Training & Progression
+    level: int = 1
+    experience: int = 0
+    intelligence: int = 10
+
     # Dynamic Attributes
     mood: str = "Neutral"   # Derived: "Happy", "Neutral", "Sad"
     
@@ -48,6 +56,9 @@ class Pet:
     
     interaction_history: List[InteractionRecord] = field(default_factory=list)
 
+    # Initialize Trihorn engine (not serialized)
+    _trihorn_engine: Optional[TrihornEngine] = field(default=None, init=False, repr=False)
+
     def __post_init__(self):
         """Perform post-initialization validation and initial setup."""
         self.name = self.name.strip()
@@ -60,7 +71,8 @@ class Pet:
             raise ValueError(f"Invalid pet species: {self.species}")
         if self.aura_color not in PET_AURA_COLORS:
             raise ValueError(f"Invalid aura color: {self.aura_color}")
-            
+
+        self._trihorn_engine = TrihornEngine()
         self._update_mood() # Set initial mood based on happiness
 
     def _update_mood(self):
@@ -71,7 +83,11 @@ class Pet:
             self.mood = "Sad"
         else:
             self.mood = "Neutral"
-        # Conceptual: AI could add nuance here based on personality_traits
+
+        # Trihorn Enhancement: Check for personality updates based on mood/state
+        if self._trihorn_engine:
+             # Just a simple conceptual hook
+             pass
 
     def _add_interaction_record(self, type: str, details: Optional[str] = None):
         """Add a new interaction to the pet's history."""
@@ -107,6 +123,38 @@ class Pet:
         # Conceptual: AI could generate a playful pet reaction based on personality.
         return True, "Played with pet!"
 
+    def train(self, training_type: str):
+        """Train the pet with Trihorn supervision."""
+        cost = PLAY_ENERGY_COST * 2
+        if self.energy < cost:
+             return False, "Pet is too mentally exhausted to train."
+
+        self.energy = self._cap_stat(self.energy - cost)
+
+        # Consult Trihorn
+        if self._trihorn_engine:
+             pet_state = self.__dict__.copy()
+             pet_state.pop('_trihorn_engine', None)
+             training_result = self._trihorn_engine.evaluate_training_session(pet_state, training_type)
+
+             xp_gain = training_result.get("xp_gain", 10)
+             self.experience += xp_gain
+
+             # Level up logic
+             if self.experience >= self.level * 100:
+                 self.level += 1
+                 self.experience = 0
+                 self.intelligence += 5
+                 level_up_msg = f"\nLEVEL UP! {self.name} is now level {self.level}!"
+             else:
+                 level_up_msg = ""
+
+             self._add_interaction_record("train", f"{training_type} session. +{xp_gain} XP")
+
+             return True, f"{training_result['narrative']}\nGained {xp_gain} XP.{level_up_msg}"
+        else:
+             return False, "Trihorn engine not active."
+
     def tick(self, current_time_ns: int):
         """
         Simulates the passage of time, decaying stats.
@@ -138,6 +186,8 @@ class Pet:
         """Return a string summary of the pet's current status."""
         return (
             f"{self.name} ({self.species}, {self.aura_color} aura)\n"
+            f"Level: {self.level} (XP: {self.experience}/{self.level * 100})\n"
+            f"Intelligence: {self.intelligence}\n"
             f"Mood: {self.mood}\n"
             f"Sustenance: {self.hunger}/{MAX_STAT}\n"
             f"Energy: {self.energy}/{MAX_STAT}\n"
@@ -173,6 +223,11 @@ class Pet:
         # Dynamically set species and aura_color if they weren't in config (from old data)
         if 'species' not in data: data['species'] = PET_ARCHETYPES.keys().__iter__().__next__()
         if 'aura_color' not in data: data['aura_color'] = PET_AURA_COLORS.keys().__iter__().__next__()
+
+        # Handle new fields for old saves
+        if 'level' not in data: data['level'] = 1
+        if 'experience' not in data: data['experience'] = 0
+        if 'intelligence' not in data: data['intelligence'] = 10
 
 
         return cls(**data)
